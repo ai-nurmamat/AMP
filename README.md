@@ -26,7 +26,7 @@
 ## 快速开始
 
 ```typescript
-import { AMPCore, MemoryTier } from 'amp-protocol';
+import { AMPCore, MemoryTier } from 'amp';
 
 const amp = new AMPCore();
 

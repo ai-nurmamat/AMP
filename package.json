@@ -1,5 +1,5 @@
 {
-  "name": "amp-protocol",
+  "name": "amp",
   "version": "0.1.0",
   "description": "Agent Memory Protocol - 让每一个 AI Agent 都能拥有记忆",
   "main": "dist/index.js",
