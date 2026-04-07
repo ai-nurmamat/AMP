@@ -1,0 +1,31 @@
+{
+  "manifest_version": 3,
+  "name": "AMP Memory Sync",
+  "version": "1.0.0",
+  "description": "AMP (Agent Memory Protocol) 官方浏览器插件：隐式捕获跨应用上下文，构建全局 AI 记忆中枢。",
+  "permissions": [
+    "storage",
+    "activeTab",
+    "scripting",
+    "history",
+    "tabs"
+  ],
+  "host_permissions": [
+    "http://*/*",
+    "https://*/*"
+  ],
+  "background": {
+    "service_worker": "src/background.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["src/content.js"]
+    }
+  ],
+  "action": {
+    "default_title": "AMP Global Memory",
+    "default_popup": "popup.html"
+  }
+}
