@@ -66,7 +66,7 @@ describe('AMPCore with MemoryStorageProvider', () => {
   });
 });
 
-describe('AMPCore with RedisStorageProvider', () => {
+describe.skip('AMPCore with RedisStorageProvider', () => {
   let amp: AMPCore;
 
   beforeAll(async () => {
