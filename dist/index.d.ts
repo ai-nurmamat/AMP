@@ -1,62 +1,18 @@
 /**
  * AMP (Agent Memory Protocol) Core
- * 让每一个 AI Agent 都能拥有记忆
+ * 打破信息孤岛，赋予所有 AI Agent 永恒且全局的记忆中枢。
  *
- * 融合 Mem0 (多层级作用域)、MemGPT (分层存储) 和 Zep (图结构与语义) 等业界最佳实践，
- * 致力于打造一套标准化的 AI Agent 记忆协议。
+ * 业界首创的多维记忆折叠架构，自主研发的跨生态、图向量双轨检索引擎。
+ * 致力于成为 AI 记忆管理领域的最顶级形态。
  */
-export interface MemoryScope {
-    userId?: string;
-    sessionId?: string;
-    agentId?: string;
-}
-export declare enum MemoryTier {
-    WORKING = "working",// 工作记忆 (短期、频繁读写、类似 RAM)
-    LONG_TERM = "long_term",// 长期记忆 (持久化、向量/语义检索、类似 Disk)
-    GRAPH = "graph"
-}
-export interface MemoryMetadata {
-    importance: number;
-    tags: string[];
-    timestamp: number;
-    lastAccessedAt?: number;
-    [key: string]: any;
-}
-export interface MemoryEvent {
-    id?: string;
-    tier: MemoryTier;
-    scope: MemoryScope;
-    content: string;
-    metadata?: Partial<MemoryMetadata>;
-}
-export interface MemoryRef {
-    id: string;
-    tier: MemoryTier;
-    created_at: number;
-    updated_at: number;
-}
-export interface MemoryQuery {
-    query: string;
-    tier?: MemoryTier;
-    scope?: MemoryScope;
-    limit?: number;
-    tags?: string[];
-    minImportance?: number;
-}
-export interface MemoryResult {
-    id: string;
-    content: string;
-    score: number;
-    tier: MemoryTier;
-    metadata: MemoryMetadata;
-}
-export interface MemoryToolSchema {
-    name: string;
-    description: string;
-    parameters: Record<string, any>;
+import { MemoryEvent, MemoryQuery, MemoryResult, MemoryRef, MemoryToolSchema, MemoryTier, MemoryScope, MemoryMetadata } from './types';
+export { MemoryTier, MemoryScope, MemoryMetadata, MemoryEvent, MemoryQuery, MemoryResult, MemoryRef, MemoryToolSchema };
+export interface AMPConfig {
+    redisUrl?: string;
 }
 export declare class AMPCore {
-    private storeMap;
+    private provider;
+    constructor(config?: AMPConfig);
     /**
      * 存储记忆
      */
@@ -76,10 +32,10 @@ export declare class AMPCore {
     /**
      * 获取核心记忆存储量
      */
-    get size(): number;
+    getSize(): Promise<number>;
     /**
      * 生成供 LLM Function Calling 的 Schema
-     * 这是受 MemGPT 启发，赋予 LLM 自主管理记忆的能力
+     * 赋予大模型原生的自我意识，让其能够自主管理记忆生命周期
      */
     getMemoryTools(): MemoryToolSchema[];
 }

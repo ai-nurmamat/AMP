@@ -9,9 +9,12 @@ import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
-import { AMPCore, MemoryTier } from "../dist/index.js"; // 引用构建后的 JS 产物
+import { z } from "zod";
+import { AMPCore, MemoryTier } from "../dist/index.js"; 
 
-const amp = new AMPCore();
+const amp = new AMPCore({
+  redisUrl: process.env.REDIS_URL // 支持通过环境变量开启 Redis 持久化
+});
 
 const server = new Server(
   {
@@ -24,6 +27,19 @@ const server = new Server(
     },
   }
 );
+
+// Zod Schemas for robust validation
+const StoreMemorySchema = z.object({
+  content: z.string().min(1, "Content cannot be empty"),
+  tier: z.nativeEnum(MemoryTier).optional().default(MemoryTier.LONG_TERM),
+  importance: z.number().min(0).max(1).optional().default(0.5),
+  tags: z.array(z.string()).optional().default([]),
+});
+
+const RetrieveMemorySchema = z.object({
+  query: z.string().min(1, "Query cannot be empty"),
+  limit: z.number().int().min(1).max(100).optional().default(5),
+});
 
 // 暴露 AMP 的记忆管理能力为 MCP Tools
 server.setRequestHandler(ListToolsRequestSchema, async () => {
@@ -41,16 +57,13 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
   try {
     if (name === "amp_store_memory") {
-      const content = String(args.content);
-      const tier = (args.tier as MemoryTier) || MemoryTier.LONG_TERM;
-      const importance = typeof args.importance === "number" ? args.importance : 0.5;
-      const tags = Array.isArray(args.tags) ? args.tags : [];
+      const parsedArgs = StoreMemorySchema.parse(args);
 
       const result = await amp.store({
-        tier,
+        tier: parsedArgs.tier,
         scope: { userId: "global-mcp-user" }, // MCP 模式下默认全局用户
-        content,
-        metadata: { importance, tags },
+        content: parsedArgs.content,
+        metadata: { importance: parsedArgs.importance, tags: parsedArgs.tags },
       });
 
       return {
@@ -59,10 +72,9 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     } 
     
     if (name === "amp_retrieve_memory") {
-      const query = String(args.query);
-      const limit = typeof args.limit === "number" ? args.limit : 5;
+      const parsedArgs = RetrieveMemorySchema.parse(args);
 
-      const results = await amp.retrieve({ query, limit });
+      const results = await amp.retrieve({ query: parsedArgs.query, limit: parsedArgs.limit });
       
       const responseText = results.length > 0
         ? results.map((r, i) => `${i + 1}. [${r.tier}] ${r.content} (Score: ${r.score.toFixed(2)})`).join("\n")
@@ -75,8 +87,15 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
     throw new Error(`Unknown tool: ${name}`);
   } catch (error) {
+    let errorMessage = "An unknown error occurred.";
+    if (error instanceof z.ZodError) {
+      errorMessage = `Invalid parameters: ${error.errors.map(e => `${e.path.join('.')}: ${e.message}`).join(', ')}`;
+    } else if (error instanceof Error) {
+      errorMessage = error.message;
+    }
+    
     return {
-      content: [{ type: "text", text: `Error: ${error.message}` }],
+      content: [{ type: "text", text: `Error: ${errorMessage}` }],
       isError: true,
     };
   }

@@ -6,188 +6,66 @@
  * 致力于成为 AI 记忆管理领域的最顶级形态。
  */
 
-// 1. 记忆作用域 (Scope) - 原创的多维隔离机制
-export interface MemoryScope {
-  userId?: string;     // 用户级记忆 (跨会话，用户偏好)
-  sessionId?: string;  // 会话级记忆 (单次对话上下文)
-  agentId?: string;    // Agent 专属记忆 (人设、系统设定、过往经验)
-}
+import { IStorageProvider, MemoryStorageProvider, RedisStorageProvider } from './storage';
+import { MemoryEvent, MemoryQuery, MemoryResult, MemoryRef, MemoryToolSchema, MemoryTier, MemoryScope, MemoryMetadata } from './types';
 
-// 2. 记忆层级 (Tier) - 独家的高速缓存与冷热数据分层模型
-export enum MemoryTier {
-  WORKING = 'working',       // 工作记忆 (短期、频繁读写、类似于人类的短期工作区)
-  LONG_TERM = 'long_term',   // 长期记忆 (持久化、向量/语义深度检索)
-  GRAPH = 'graph'            // 图记忆 (实体关系、复杂的逻辑多跳推理)
-}
+export { MemoryTier, MemoryScope, MemoryMetadata, MemoryEvent, MemoryQuery, MemoryResult, MemoryRef, MemoryToolSchema };
 
-// 3. 记忆元数据
-export interface MemoryMetadata {
-  importance: number;      // 重要性得分 (0-1，用于遗忘曲线和上下文修剪)
-  tags: string[];          // 标签分类
-  timestamp: number;       // 创建时间
-  lastAccessedAt?: number; // 最后访问时间 (用于淘汰机制)
-  [key: string]: any;      // 扩展字段
-}
-
-// 4. 标准记忆实体
-export interface MemoryEvent {
-  id?: string;
-  tier: MemoryTier;
-  scope: MemoryScope;
-  content: string;
-  metadata?: Partial<MemoryMetadata>;
-}
-
-// 5. 记忆引用
-export interface MemoryRef {
-  id: string;
-  tier: MemoryTier;
-  created_at: number;
-  updated_at: number;
-}
-
-// 6. 高级检索查询
-export interface MemoryQuery {
-  query: string;
-  tier?: MemoryTier;
-  scope?: MemoryScope;
-  limit?: number;
-  tags?: string[];
-  minImportance?: number; // 过滤低重要性记忆
-}
-
-export interface MemoryResult {
-  id: string;
-  content: string;
-  score: number;      // 相似度得分 (向量检索时)
-  tier: MemoryTier;
-  metadata: MemoryMetadata;
-}
-
-// 7. 记忆抽取工具定义 (供 LLM Function Calling 使用)
-export interface MemoryToolSchema {
-  name: string;
-  description: string;
-  parameters: Record<string, any>;
+export interface AMPConfig {
+  redisUrl?: string; // 如果提供，自动启用工业级持久化；否则回退到高级内存索引模式
 }
 
 export class AMPCore {
-  // 模拟持久化存储 (实际应对接 VectorDB 或 GraphDB)
-  private storeMap: Map<string, MemoryResult> = new Map();
+  private provider: IStorageProvider;
+
+  constructor(config?: AMPConfig) {
+    if (config?.redisUrl) {
+      this.provider = new RedisStorageProvider(config.redisUrl);
+      // 触发异步连接
+      if (this.provider.connect) {
+        this.provider.connect().catch(err => {
+          console.error('[AMP] Redis connection failed, falling back to MemoryStorageProvider', err);
+          this.provider = new MemoryStorageProvider();
+        });
+      }
+    } else {
+      this.provider = new MemoryStorageProvider();
+    }
+  }
 
   /**
    * 存储记忆
    */
   async store(event: MemoryEvent): Promise<MemoryRef> {
-    const id = event.id || crypto.randomUUID();
-    const now = Date.now();
-    
-    const memoryRecord: MemoryResult = {
-      id,
-      content: event.content,
-      score: 1.0,
-      tier: event.tier,
-      metadata: {
-        importance: event.metadata?.importance ?? 0.5,
-        tags: event.metadata?.tags || [],
-        timestamp: now,
-        lastAccessedAt: now,
-        ...event.metadata
-      }
-    };
-
-    // 可以在这里扩展向 Vector DB 或 Graph DB 的写入逻辑
-    this.storeMap.set(id, memoryRecord);
-
-    return {
-      id,
-      tier: event.tier,
-      created_at: now,
-      updated_at: now,
-    };
+    return this.provider.store(event);
   }
 
   /**
    * 检索记忆
    */
   async retrieve(query: MemoryQuery): Promise<MemoryResult[]> {
-    const results: MemoryResult[] = [];
-    
-    for (const [id, record] of this.storeMap.entries()) {
-      // 1. 层级和作用域过滤
-      if (query.tier && record.tier !== query.tier) continue;
-      
-      // 2. 标签和重要性过滤
-      if (query.tags && !query.tags.every(t => record.metadata.tags.includes(t))) continue;
-      if (query.minImportance && record.metadata.importance < query.minImportance) continue;
-
-      // 3. 内容相似度模拟 (实际应用中应替换为 Embedding 向量检索)
-      // 此处使用简单的子串包含和关键词匹配计算得分
-      let score = 0;
-      if (record.content.includes(query.query)) {
-        score = 1.0;
-      } else {
-        // 简单计算重合词
-        const words = query.query.split(' ').filter(w => w.trim().length > 0);
-        if (words.length > 0) {
-            const matchCount = words.filter(w => record.content.includes(w)).length;
-            score = matchCount / words.length;
-        }
-      }
-
-      if (score > 0) {
-        record.metadata.lastAccessedAt = Date.now(); // 更新访问时间
-        results.push({ ...record, score });
-      }
-    }
-
-    // 按得分降序，同分按重要性降序
-    results.sort((a, b) => {
-      if (b.score !== a.score) return b.score - a.score;
-      return b.metadata.importance - a.metadata.importance;
-    });
-
-    return results.slice(0, query.limit || 10);
+    return this.provider.retrieve(query);
   }
 
   /**
    * 更新记忆
    */
   async update(id: string, updates: Partial<MemoryEvent>): Promise<MemoryRef | null> {
-    const record = this.storeMap.get(id);
-    if (!record) return null;
-
-    if (updates.content) record.content = updates.content;
-    if (updates.tier) record.tier = updates.tier;
-    if (updates.metadata) {
-      record.metadata = { ...record.metadata, ...updates.metadata };
-    }
-    
-    const now = Date.now();
-    record.metadata.updated_at = now;
-
-    this.storeMap.set(id, record);
-
-    return {
-      id,
-      tier: record.tier,
-      created_at: record.metadata.timestamp,
-      updated_at: now,
-    };
+    return this.provider.update(id, updates);
   }
 
   /**
    * 删除记忆
    */
   async delete(id: string): Promise<boolean> {
-    return this.storeMap.delete(id);
+    return this.provider.delete(id);
   }
 
   /**
    * 获取核心记忆存储量
    */
-  get size(): number {
-    return this.storeMap.size;
+  async getSize(): Promise<number> {
+    return this.provider.getSize();
   }
 
   /**

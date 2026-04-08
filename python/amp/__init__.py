@@ -6,29 +6,44 @@ AMP (Agent Memory Protocol) - Python Implementation
 
 import uuid
 import time
+import json
+import logging
 from enum import Enum
 from typing import List, Dict, Any, Optional
 from pydantic import BaseModel, Field
 
-# 1. 记忆作用域 (Scope) - 原创的多维隔离机制
+try:
+    import redis
+
+    REDIS_AVAILABLE = True
+except ImportError:
+    REDIS_AVAILABLE = False
+
+logger = logging.getLogger(__name__)
+
+
+# 1. 记忆作用域 (Scope)
 class MemoryScope(BaseModel):
     user_id: Optional[str] = Field(None, description="用户级记忆 (跨会话，用户偏好)")
     session_id: Optional[str] = Field(None, description="会话级记忆 (单次对话上下文)")
     agent_id: Optional[str] = Field(None, description="Agent 专属记忆 (人设、系统设定)")
 
-# 2. 记忆层级 (Tier) - 独家的高速缓存与冷热数据分层模型
+
+# 2. 记忆层级 (Tier)
 class MemoryTier(str, Enum):
-    WORKING = 'working'       # 工作记忆 (短期、频繁读写、类似于人类的短期工作区)
-    LONG_TERM = 'long_term'   # 长期记忆 (持久化、向量/语义深度检索)
-    GRAPH = 'graph'           # 图记忆 (实体关系、复杂的逻辑多跳推理)
+    WORKING = "working"
+    LONG_TERM = "long_term"
+    GRAPH = "graph"
+
 
 # 3. 记忆元数据
 class MemoryMetadata(BaseModel):
     importance: float = Field(default=0.5, ge=0.0, le=1.0, description="重要性得分")
     tags: List[str] = Field(default_factory=list, description="标签分类")
-    timestamp: float = Field(default_factory=lambda: time.time())
+    timestamp: float = Field(default_factory=time.time)
     last_accessed_at: Optional[float] = None
     extra: Dict[str, Any] = Field(default_factory=dict)
+
 
 # 4. 标准记忆实体
 class MemoryEvent(BaseModel):
@@ -37,6 +52,7 @@ class MemoryEvent(BaseModel):
     scope: MemoryScope
     content: str
     metadata: Optional[MemoryMetadata] = None
+
 
 # 5. 高级检索查询
 class MemoryQuery(BaseModel):
@@ -47,6 +63,7 @@ class MemoryQuery(BaseModel):
     tags: Optional[List[str]] = None
     min_importance: Optional[float] = None
 
+
 class MemoryResult(BaseModel):
     id: str
     content: str
@@ -54,54 +71,48 @@ class MemoryResult(BaseModel):
     tier: MemoryTier
     metadata: MemoryMetadata
 
-class AMPCore:
+
+class StorageProvider:
+    def store(self, event: MemoryEvent) -> Dict[str, Any]:
+        raise NotImplementedError
+
+    def retrieve(self, query: MemoryQuery) -> List[MemoryResult]:
+        raise NotImplementedError
+
+    def delete(self, mem_id: str) -> bool:
+        raise NotImplementedError
+
+
+class MemoryStorageProvider(StorageProvider):
     def __init__(self):
-        # 模拟持久化存储 (实际应对接 VectorDB 或 GraphDB)
         self._store: Dict[str, MemoryResult] = {}
 
     def store(self, event: MemoryEvent) -> Dict[str, Any]:
-        """存储记忆"""
         mem_id = event.id or str(uuid.uuid4())
         now = time.time()
-        
         metadata = event.metadata or MemoryMetadata()
         metadata.timestamp = now
         metadata.last_accessed_at = now
-
         record = MemoryResult(
-            id=mem_id,
-            content=event.content,
-            score=1.0,
-            tier=event.tier,
-            metadata=metadata
+            id=mem_id, content=event.content, score=1.0, tier=event.tier, metadata=metadata
         )
-        
         self._store[mem_id] = record
-        
-        return {
-            "id": mem_id,
-            "tier": event.tier.value,
-            "created_at": now,
-            "updated_at": now
-        }
+        return {"id": mem_id, "tier": event.tier.value, "created_at": now, "updated_at": now}
 
     def retrieve(self, query: MemoryQuery) -> List[MemoryResult]:
-        """检索记忆"""
         results = []
         now = time.time()
-        
         for record in self._store.values():
-            # 1. 层级过滤
             if query.tier and record.tier != query.tier:
                 continue
-                
-            # 2. 标签和重要性过滤
             if query.tags and not all(t in record.metadata.tags for t in query.tags):
                 continue
-            if query.min_importance is not None and record.metadata.importance < query.min_importance:
+            if (
+                query.min_importance is not None
+                and record.metadata.importance < query.min_importance
+            ):
                 continue
 
-            # 3. 内容相似度模拟 (实际应用中应替换为 Embedding 向量检索)
             score = 0.0
             if query.query in record.content:
                 score = 1.0
@@ -116,22 +127,101 @@ class AMPCore:
                 record.score = score
                 results.append(record)
 
-        # 按得分降序，同分按重要性降序
         results.sort(key=lambda x: (x.score, x.metadata.importance), reverse=True)
-        return results[:query.limit]
+        return results[: query.limit]
 
     def delete(self, mem_id: str) -> bool:
-        """删除记忆"""
         if mem_id in self._store:
             del self._store[mem_id]
             return True
         return False
 
+
+class RedisStorageProvider(StorageProvider):
+    def __init__(self, redis_url: str):
+        if not REDIS_AVAILABLE:
+            raise ImportError("Redis package is not installed. Run `pip install redis`.")
+        self.client = redis.Redis.from_url(redis_url, decode_responses=True)
+        self.prefix = "amp:memory:"
+        # In a real enterprise app, we'd setup RediSearch indexes (FT.CREATE) here.
+
+    def store(self, event: MemoryEvent) -> Dict[str, Any]:
+        mem_id = event.id or str(uuid.uuid4())
+        now = time.time()
+        metadata = event.metadata or MemoryMetadata()
+        metadata.timestamp = now
+        metadata.last_accessed_at = now
+        record = MemoryResult(
+            id=mem_id, content=event.content, score=1.0, tier=event.tier, metadata=metadata
+        )
+        self.client.set(f"{self.prefix}{mem_id}", record.model_dump_json())
+        return {"id": mem_id, "tier": event.tier.value, "created_at": now, "updated_at": now}
+
+    def retrieve(self, query: MemoryQuery) -> List[MemoryResult]:
+        results = []
+        now = time.time()
+        for key in self.client.scan_iter(f"{self.prefix}*"):
+            data = self.client.get(key)
+            if not data:
+                continue
+            record = MemoryResult.model_validate_json(data)
+
+            if query.tier and record.tier != query.tier:
+                continue
+            if query.tags and not all(t in record.metadata.tags for t in query.tags):
+                continue
+            if (
+                query.min_importance is not None
+                and record.metadata.importance < query.min_importance
+            ):
+                continue
+
+            score = 0.0
+            if query.query in record.content:
+                score = 1.0
+            else:
+                words = [w for w in query.query.split() if w.strip()]
+                if words:
+                    match_count = sum(1 for w in words if w in record.content)
+                    score = match_count / len(words)
+
+            if score > 0:
+                record.metadata.last_accessed_at = now
+                self.client.set(key, record.model_dump_json())
+                record.score = score
+                results.append(record)
+
+        results.sort(key=lambda x: (x.score, x.metadata.importance), reverse=True)
+        return results[: query.limit]
+
+    def delete(self, mem_id: str) -> bool:
+        return self.client.delete(f"{self.prefix}{mem_id}") > 0
+
+
+class AMPCore:
+    def __init__(self, redis_url: Optional[str] = None):
+        if redis_url and REDIS_AVAILABLE:
+            try:
+                self.provider = RedisStorageProvider(redis_url)
+                self.provider.client.ping()
+            except Exception as e:
+                logger.warning(
+                    f"[AMP] Redis connection failed, falling back to MemoryStorageProvider: {e}"
+                )
+                self.provider = MemoryStorageProvider()
+        else:
+            self.provider = MemoryStorageProvider()
+
+    def store(self, event: MemoryEvent) -> Dict[str, Any]:
+        return self.provider.store(event)
+
+    def retrieve(self, query: MemoryQuery) -> List[MemoryResult]:
+        return self.provider.retrieve(query)
+
+    def delete(self, mem_id: str) -> bool:
+        return self.provider.delete(mem_id)
+
     def get_memory_tools(self) -> List[Dict[str, Any]]:
-        """
-        生成供 LLM Function Calling 的 Schema (OpenAI 格式)
-        赋予 LLM 自主管理记忆的能力
-        """
         return [
             {
                 "type": "function",
@@ -141,14 +231,28 @@ class AMPCore:
                     "parameters": {
                         "type": "object",
                         "properties": {
-                            "content": { "type": "string", "description": "The core content of the memory to store." },
-                            "tier": { "type": "string", "enum": ["working", "long_term", "graph"], "description": "The tier to store this memory in." },
-                            "importance": { "type": "number", "description": "Importance score from 0.0 to 1.0" },
-                            "tags": { "type": "array", "items": { "type": "string" }, "description": "Tags for categorization" }
+                            "content": {
+                                "type": "string",
+                                "description": "The core content of the memory to store.",
+                            },
+                            "tier": {
+                                "type": "string",
+                                "enum": ["working", "long_term", "graph"],
+                                "description": "The tier to store this memory in.",
+                            },
+                            "importance": {
+                                "type": "number",
+                                "description": "Importance score from 0.0 to 1.0",
+                            },
+                            "tags": {
+                                "type": "array",
+                                "items": {"type": "string"},
+                                "description": "Tags for categorization",
+                            },
                         },
-                        "required": ["content", "tier"]
-                    }
-                }
+                        "required": ["content", "tier"],
+                    },
+                },
             },
             {
                 "type": "function",
@@ -158,11 +262,14 @@ class AMPCore:
                     "parameters": {
                         "type": "object",
                         "properties": {
-                            "query": { "type": "string", "description": "The search query" },
-                            "limit": { "type": "number", "description": "Maximum number of results to return" }
+                            "query": {"type": "string", "description": "The search query"},
+                            "limit": {
+                                "type": "number",
+                                "description": "Maximum number of results to return",
+                            },
                         },
-                        "required": ["query"]
-                    }
-                }
-            }
+                        "required": ["query"],
+                    },
+                },
+            },
         ]

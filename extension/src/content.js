@@ -7,22 +7,28 @@ let pageEntryTime = Date.now();
 
 // 监听用户的文本高亮选中事件
 document.addEventListener('mouseup', () => {
-  const selection = window.getSelection().toString().trim();
-  
-  // 只有当用户选中了有意义的长句时，才视为隐式记忆的线索
-  if (selection.length > 20 && selection.length < 500) {
-    const dwellTime = Math.floor((Date.now() - pageEntryTime) / 1000);
+  try {
+    const selection = window.getSelection()?.toString().trim() || '';
     
-    // 发送给 Background Service Worker
-    chrome.runtime.sendMessage({
-      type: 'STORE_IMPLICIT_MEMORY',
-      payload: {
-        action: 'highlight',
-        text: selection,
-        url: window.location.href,
-        domain: window.location.hostname,
-        dwellTime: dwellTime
-      }
-    });
+    // 只有当用户选中了有意义的长句时，才视为隐式记忆的线索
+    if (selection.length > 20 && selection.length < 500) {
+      const dwellTime = Math.floor((Date.now() - pageEntryTime) / 1000);
+      
+      // 发送给 Background Service Worker，增加错误捕获
+      chrome.runtime.sendMessage({
+        type: 'STORE_IMPLICIT_MEMORY',
+        payload: {
+          action: 'highlight',
+          text: selection,
+          url: window.location.href,
+          domain: window.location.hostname,
+          dwellTime: dwellTime
+        }
+      }).catch(err => {
+        console.warn('[AMP] Content script message failed:', err);
+      });
+    }
+  } catch (error) {
+    console.error('[AMP] Error in content script:', error);
   }
 });
