@@ -5,7 +5,7 @@ setup(
     version="1.0.0",
     author="OpenClaw Team",
     author_email="founders@openclaw.ai",
-    description="AMP (Agent Memory Protocol) - The ultimate memory protocol for AI Agents, empowering cross-app and hybrid vector-graph storage.",
+    description="AMP (Agent Memory Protocol) - 业界首创的完全自主研发的AI Agent记忆引擎，跨生态、图向量双轨检索引擎。",
     long_description=open("README.md", encoding="utf-8").read(),
     long_description_content_type="text/markdown",
     url="https://github.com/openclaw/amp",

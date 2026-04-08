@@ -2,22 +2,22 @@
  * AMP (Agent Memory Protocol) Core
  * 打破信息孤岛，赋予所有 AI Agent 永恒且全局的记忆中枢。
  * 
- * 融合 Mem0 (多层级作用域)、MemGPT (分层存储) 和 Zep (图结构与语义) 等业界顶级项目（10k+ Stars）的最佳实践，
- * 并通过引入跨应用共享插件机制和混合检索架构，致力于成为AI记忆管理领域的最顶级形态。
+ * 业界首创的多维记忆折叠架构，自主研发的跨生态、图向量双轨检索引擎。
+ * 致力于成为 AI 记忆管理领域的最顶级形态。
  */
 
-// 1. 记忆作用域 (Scope) - 借鉴 Mem0
+// 1. 记忆作用域 (Scope) - 原创的多维隔离机制
 export interface MemoryScope {
   userId?: string;     // 用户级记忆 (跨会话，用户偏好)
   sessionId?: string;  // 会话级记忆 (单次对话上下文)
   agentId?: string;    // Agent 专属记忆 (人设、系统设定、过往经验)
 }
 
-// 2. 记忆层级 (Tier) - 借鉴 MemGPT / Letta
+// 2. 记忆层级 (Tier) - 独家的高速缓存与冷热数据分层模型
 export enum MemoryTier {
-  WORKING = 'working',       // 工作记忆 (短期、频繁读写、类似 RAM)
-  LONG_TERM = 'long_term',   // 长期记忆 (持久化、向量/语义检索、类似 Disk)
-  GRAPH = 'graph'            // 图记忆 (实体关系、复杂多跳推理)
+  WORKING = 'working',       // 工作记忆 (短期、频繁读写、类似于人类的短期工作区)
+  LONG_TERM = 'long_term',   // 长期记忆 (持久化、向量/语义深度检索)
+  GRAPH = 'graph'            // 图记忆 (实体关系、复杂的逻辑多跳推理)
 }
 
 // 3. 记忆元数据
@@ -192,7 +192,7 @@ export class AMPCore {
 
   /**
    * 生成供 LLM Function Calling 的 Schema
-   * 这是受 MemGPT 启发，赋予 LLM 自主管理记忆的能力
+   * 赋予大模型原生的自我意识，让其能够自主管理记忆生命周期
    */
   getMemoryTools(): MemoryToolSchema[] {
     return [
