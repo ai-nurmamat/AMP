@@ -1,5 +1,6 @@
 """
 AMP (Agent Memory Protocol) - Python Implementation
+打破信息孤岛，赋予所有 AI Agent 永恒且全局的记忆中枢。
 The ultimate memory protocol for AI Agents, combining the best practices of Mem0, MemGPT, and Zep.
 """
 
