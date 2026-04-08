@@ -1,12 +1,16 @@
 """
 AMP (Agent Memory Protocol) - Python Implementation
-打破信息孤岛，赋予所有 AI Agent 永恒且全局的记忆中枢。
-业界首创的多维记忆折叠架构，自主研发的跨生态、图向量双轨检索引擎。
+
+A production-ready memory management protocol designed for autonomous AI agents.
+It introduces a multidimensional memory isolation architecture and an enterprise-grade
+hybrid retrieval engine (combining semantic vector search and knowledge graph relationships).
+
+This module provides the core interfaces and storage providers to ensure cross-ecosystem
+compatibility and high-performance memory operations.
 """
 
 import uuid
 import time
-import json
 import logging
 from enum import Enum
 from typing import List, Dict, Any, Optional
@@ -22,24 +26,32 @@ except ImportError:
 logger = logging.getLogger(__name__)
 
 
-# 1. 记忆作用域 (Scope)
+# 1. Memory Scope - Multidimensional Isolation Mechanism
 class MemoryScope(BaseModel):
-    user_id: Optional[str] = Field(None, description="用户级记忆 (跨会话，用户偏好)")
-    session_id: Optional[str] = Field(None, description="会话级记忆 (单次对话上下文)")
-    agent_id: Optional[str] = Field(None, description="Agent 专属记忆 (人设、系统设定)")
+    user_id: Optional[str] = Field(
+        None, description="User-level memory (cross-session preferences)."
+    )
+    session_id: Optional[str] = Field(
+        None, description="Session-level memory (short-lived context)."
+    )
+    agent_id: Optional[str] = Field(
+        None, description="Agent-level memory (personas, system prompts)."
+    )
 
 
-# 2. 记忆层级 (Tier)
+# 2. Memory Tier - Hierarchical Storage Model
 class MemoryTier(str, Enum):
-    WORKING = "working"
-    LONG_TERM = "long_term"
-    GRAPH = "graph"
+    WORKING = "working"  # High-frequency read/write memory (Scratchpad)
+    LONG_TERM = "long_term"  # Persistent storage with vector/semantic retrieval
+    GRAPH = "graph"  # Graph memory for complex entity relationships and multi-hop reasoning
 
 
-# 3. 记忆元数据
+# 3. Memory Metadata
 class MemoryMetadata(BaseModel):
-    importance: float = Field(default=0.5, ge=0.0, le=1.0, description="重要性得分")
-    tags: List[str] = Field(default_factory=list, description="标签分类")
+    importance: float = Field(
+        default=0.5, ge=0.0, le=1.0, description="Importance score for memory consolidation."
+    )
+    tags: List[str] = Field(default_factory=list, description="Categorization tags.")
     timestamp: float = Field(default_factory=time.time)
     last_accessed_at: Optional[float] = None
     extra: Dict[str, Any] = Field(default_factory=dict)
