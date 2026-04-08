@@ -12,7 +12,7 @@ import { MemoryEvent, MemoryQuery, MemoryResult, MemoryRef, MemoryToolSchema, Me
 export { MemoryTier, MemoryScope, MemoryMetadata, MemoryEvent, MemoryQuery, MemoryResult, MemoryRef, MemoryToolSchema };
 
 export interface AMPConfig {
-  redisUrl?: string; // 如果提供，自动启用工业级持久化；否则回退到高级内存索引模式
+  redisUrl?: string; // 若提供有效的 Redis URL，系统将自动激活工业级持久化引擎；否则将平滑回退至高级内存索引模式
 }
 
 export class AMPCore {
@@ -21,10 +21,10 @@ export class AMPCore {
   constructor(config?: AMPConfig) {
     if (config?.redisUrl) {
       this.provider = new RedisStorageProvider(config.redisUrl);
-      // 触发异步连接
+      // 触发异步连接并实现优雅降级
       if (this.provider.connect) {
         this.provider.connect().catch(err => {
-          console.error('[AMP] Redis connection failed, falling back to MemoryStorageProvider', err);
+          console.error('[AMP] 工业级存储引擎连接失败，正在平滑降级至内存索引模式 (MemoryStorageProvider)', err);
           this.provider = new MemoryStorageProvider();
         });
       }
@@ -34,43 +34,45 @@ export class AMPCore {
   }
 
   /**
-   * 存储记忆
+   * 存储结构化记忆事件
+   * 支持通过 Tier (层级) 和 Scope (作用域) 进行细粒度隔离
    */
   async store(event: MemoryEvent): Promise<MemoryRef> {
     return this.provider.store(event);
   }
 
   /**
-   * 检索记忆
+   * 基于查询条件检索相关记忆
+   * 内部集成了基于阈值、标签和重要性的复合打分机制
    */
   async retrieve(query: MemoryQuery): Promise<MemoryResult[]> {
     return this.provider.retrieve(query);
   }
 
   /**
-   * 更新记忆
+   * 更新已有记忆的核心内容或元数据属性
    */
   async update(id: string, updates: Partial<MemoryEvent>): Promise<MemoryRef | null> {
     return this.provider.update(id, updates);
   }
 
   /**
-   * 删除记忆
+   * 物理删除指定的记忆节点
    */
   async delete(id: string): Promise<boolean> {
     return this.provider.delete(id);
   }
 
   /**
-   * 获取核心记忆存储量
+   * 获取当前底层存储引擎的记忆节点总数
    */
   async getSize(): Promise<number> {
     return this.provider.getSize();
   }
 
   /**
-   * 生成供 LLM Function Calling 的 Schema
-   * 赋予大模型原生的自我意识，让其能够自主管理记忆生命周期
+   * 暴露符合 LLM Function Calling 标准的 Schema 接口
+   * 赋予大模型原生的自我意识，使其能够以类操作系统分页的方式自主管理记忆生命周期
    */
   getMemoryTools(): MemoryToolSchema[] {
     return [

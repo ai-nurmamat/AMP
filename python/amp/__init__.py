@@ -1,12 +1,11 @@
 """
 AMP (Agent Memory Protocol) - Python Implementation
 
-A production-ready memory management protocol designed for autonomous AI agents.
-It introduces a multidimensional memory isolation architecture and an enterprise-grade
-hybrid retrieval engine (combining semantic vector search and knowledge graph relationships).
+打破信息孤岛，赋予所有 AI Agent 永恒且全局的记忆中枢。
+业界首创的多维记忆折叠架构，自主研发的跨生态、图向量双轨检索引擎。
+致力于成为 AI 记忆管理领域的最顶级形态。
 
-This module provides the core interfaces and storage providers to ensure cross-ecosystem
-compatibility and high-performance memory operations.
+本模块提供了核心的接口和存储 Provider，确保跨生态兼容性以及高性能的记忆管理。
 """
 
 import uuid
@@ -26,32 +25,26 @@ except ImportError:
 logger = logging.getLogger(__name__)
 
 
-# 1. Memory Scope - Multidimensional Isolation Mechanism
+# 1. 记忆作用域 (Memory Scope) - 多维隔离机制
 class MemoryScope(BaseModel):
-    user_id: Optional[str] = Field(
-        None, description="User-level memory (cross-session preferences)."
-    )
-    session_id: Optional[str] = Field(
-        None, description="Session-level memory (short-lived context)."
-    )
-    agent_id: Optional[str] = Field(
-        None, description="Agent-level memory (personas, system prompts)."
-    )
+    user_id: Optional[str] = Field(None, description="用户级记忆：用于跨会话、跨生态的长期用户偏好及画像存储")
+    session_id: Optional[str] = Field(None, description="会话级记忆：用于隔离单次对话流，生命周期随对话结束而终止")
+    agent_id: Optional[str] = Field(None, description="智能体级记忆：用于存储专属人设、系统设定及解决问题的历史经验")
 
 
-# 2. Memory Tier - Hierarchical Storage Model
+# 2. 记忆层级 (Memory Tier) - 高速缓存与冷热数据分层模型
 class MemoryTier(str, Enum):
-    WORKING = "working"  # High-frequency read/write memory (Scratchpad)
-    LONG_TERM = "long_term"  # Persistent storage with vector/semantic retrieval
-    GRAPH = "graph"  # Graph memory for complex entity relationships and multi-hop reasoning
+    WORKING = "working"  # 工作记忆：针对短期、高频读写场景设计的 Scratchpad（暂存区）
+    LONG_TERM = "long_term"  # 长期记忆：支持向量持久化与深度语义检索的冷数据层
+    GRAPH = "graph"  # 图记忆：面向复杂逻辑、实体关系及多跳推理的结构化图谱层
 
 
-# 3. Memory Metadata
+# 3. 记忆元数据 (Memory Metadata)
 class MemoryMetadata(BaseModel):
     importance: float = Field(
-        default=0.5, ge=0.0, le=1.0, description="Importance score for memory consolidation."
+        default=0.5, ge=0.0, le=1.0, description="重要性得分 (范围 0.0 - 1.0)，为后台艾宾浩斯遗忘曲线及上下文修剪提供决策依据"
     )
-    tags: List[str] = Field(default_factory=list, description="Categorization tags.")
+    tags: List[str] = Field(default_factory=list, description="分类标签，用于精确的元数据过滤与检索")
     timestamp: float = Field(default_factory=time.time)
     last_accessed_at: Optional[float] = None
     extra: Dict[str, Any] = Field(default_factory=dict)
