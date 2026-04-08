@@ -11,7 +11,42 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       .catch(err => sendResponse({ status: 'error', message: err.message }));
     return true; // 表示将异步发送响应
   }
+  
+  if (request.type === 'FORCE_SYNC') {
+    // 强制同步的逻辑：可以构造一条特殊的记录或只检查连通性
+    forceSyncToMcp()
+      .then(() => sendResponse({ status: 'success' }))
+      .catch(err => sendResponse({ status: 'error', message: err.message }));
+    return true;
+  }
 });
+
+async function forceSyncToMcp() {
+  const mcpToken = await getMcpToken();
+  const pingEvent = {
+    tier: 'short_term',
+    scope: { userId: 'global-user' },
+    content: `[Manual Sync] 用户手动触发了与 MCP 服务器的同步。`,
+    metadata: {
+      importance: 1.0,
+      tags: ['system', 'manual-sync'],
+      timestamp: Date.now()
+    }
+  };
+
+  const response = await fetch('http://localhost:3000/memory', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${mcpToken}`
+    },
+    body: JSON.stringify(pingEvent)
+  });
+  
+  if (!response.ok) {
+    throw new Error(`MCP Sync Failed: ${response.status}`);
+  }
+}
 
 async function handleImplicitMemory(payload, tab) {
   try {
@@ -28,16 +63,40 @@ async function handleImplicitMemory(payload, tab) {
 
     console.log('[AMP] 同步隐式记忆至核心库:', memoryEvent);
 
-    // 更新本地累计数量，供 Popup 展示
+    // Update local count for popup display
     const { implicitMemoryCount = 0 } = await chrome.storage.local.get(['implicitMemoryCount']);
     await chrome.storage.local.set({ implicitMemoryCount: implicitMemoryCount + 1 });
 
-    // 颠覆性设计：未来此处应连接至用户的个人 MCP 服务器进行持久化同步
-    // await fetch('http://localhost:8000/api/v1/memory', { ... })
+    // Send memory to MCP Server (http://localhost:3000/memory) using Bearer token auth
+    const mcpToken = await getMcpToken(); // Fetch from storage or use default
+    
+    try {
+      const response = await fetch('http://localhost:3000/memory', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${mcpToken}`
+        },
+        body: JSON.stringify(memoryEvent)
+      });
+      
+      if (!response.ok) {
+        console.warn(`[AMP] MCP Server Sync Failed: ${response.status} ${response.statusText}`);
+      } else {
+        console.log('[AMP] Successfully synced memory to MCP Server');
+      }
+    } catch (networkError) {
+      console.warn('[AMP] Could not connect to MCP Server:', networkError.message);
+    }
   } catch (error) {
     console.error('[AMP] Background Sync Error:', error);
     throw error;
   }
+}
+
+async function getMcpToken() {
+  const { mcpAuthToken } = await chrome.storage.local.get(['mcpAuthToken']);
+  return mcpAuthToken || 'YOUR_DEFAULT_BEARER_TOKEN';
 }
 
 function calculateImportance(payload) {

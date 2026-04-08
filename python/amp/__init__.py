@@ -11,13 +11,17 @@ AMP (Agent Memory Protocol) - Python Implementation
 import uuid
 import time
 import logging
+import asyncio
 from enum import Enum
 from typing import List, Dict, Any, Optional
 from pydantic import BaseModel, Field
 
 try:
-    import redis
-
+    import redis.asyncio as redis
+    from redis.commands.search.field import TextField, TagField, NumericField
+    from redis.commands.search.index_definition import IndexDefinition, IndexType
+    from redis.commands.search.query import Query
+    from redis.exceptions import ResponseError
     REDIS_AVAILABLE = True
 except ImportError:
     REDIS_AVAILABLE = False
@@ -78,13 +82,19 @@ class MemoryResult(BaseModel):
 
 
 class StorageProvider:
-    def store(self, event: MemoryEvent) -> Dict[str, Any]:
+    async def store(self, event: MemoryEvent) -> Dict[str, Any]:
         raise NotImplementedError
 
-    def retrieve(self, query: MemoryQuery) -> List[MemoryResult]:
+    async def retrieve(self, query: MemoryQuery) -> List[MemoryResult]:
         raise NotImplementedError
 
-    def delete(self, mem_id: str) -> bool:
+    async def delete(self, mem_id: str) -> bool:
+        raise NotImplementedError
+
+    async def store_batch(self, events: List[MemoryEvent]) -> List[Dict[str, Any]]:
+        raise NotImplementedError
+
+    async def retrieve_batch(self, queries: List[MemoryQuery]) -> List[List[MemoryResult]]:
         raise NotImplementedError
 
 
@@ -92,7 +102,7 @@ class MemoryStorageProvider(StorageProvider):
     def __init__(self):
         self._store: Dict[str, MemoryResult] = {}
 
-    def store(self, event: MemoryEvent) -> Dict[str, Any]:
+    async def store(self, event: MemoryEvent) -> Dict[str, Any]:
         mem_id = event.id or str(uuid.uuid4())
         now = time.time()
         metadata = event.metadata or MemoryMetadata()
@@ -104,7 +114,10 @@ class MemoryStorageProvider(StorageProvider):
         self._store[mem_id] = record
         return {"id": mem_id, "tier": event.tier.value, "created_at": now, "updated_at": now}
 
-    def retrieve(self, query: MemoryQuery) -> List[MemoryResult]:
+    async def store_batch(self, events: List[MemoryEvent]) -> List[Dict[str, Any]]:
+        return [await self.store(event) for event in events]
+
+    async def retrieve(self, query: MemoryQuery) -> List[MemoryResult]:
         results = []
         now = time.time()
         for record in self._store.values():
@@ -135,7 +148,10 @@ class MemoryStorageProvider(StorageProvider):
         results.sort(key=lambda x: (x.score, x.metadata.importance), reverse=True)
         return results[: query.limit]
 
-    def delete(self, mem_id: str) -> bool:
+    async def retrieve_batch(self, queries: List[MemoryQuery]) -> List[List[MemoryResult]]:
+        return [await self.retrieve(q) for q in queries]
+
+    async def delete(self, mem_id: str) -> bool:
         if mem_id in self._store:
             del self._store[mem_id]
             return True
@@ -148,9 +164,27 @@ class RedisStorageProvider(StorageProvider):
             raise ImportError("Redis package is not installed. Run `pip install redis`.")
         self.client = redis.Redis.from_url(redis_url, decode_responses=True)
         self.prefix = "amp:memory:"
-        # In a real enterprise app, we'd setup RediSearch indexes (FT.CREATE) here.
+        self.index_name = "idx:amp:memory"
+        self._initialized = False
 
-    def store(self, event: MemoryEvent) -> Dict[str, Any]:
+    async def initialize(self):
+        if self._initialized:
+            return
+        try:
+            await self.client.ft(self.index_name).info()
+        except ResponseError:
+            schema = (
+                TextField("$.content", as_name="content"),
+                TagField("$.tier", as_name="tier"),
+                TagField("$.metadata.tags.*", as_name="tags"),
+                NumericField("$.metadata.importance", as_name="importance")
+            )
+            definition = IndexDefinition(prefix=[self.prefix], index_type=IndexType.JSON)
+            await self.client.ft(self.index_name).create_index(schema, definition=definition)
+        self._initialized = True
+
+    async def store(self, event: MemoryEvent) -> Dict[str, Any]:
+        await self.initialize()
         mem_id = event.id or str(uuid.uuid4())
         now = time.time()
         metadata = event.metadata or MemoryMetadata()
@@ -159,56 +193,95 @@ class RedisStorageProvider(StorageProvider):
         record = MemoryResult(
             id=mem_id, content=event.content, score=1.0, tier=event.tier, metadata=metadata
         )
-        self.client.set(f"{self.prefix}{mem_id}", record.model_dump_json())
+        await self.client.json().set(f"{self.prefix}{mem_id}", "$", record.model_dump(mode="json"))  # type: ignore
         return {"id": mem_id, "tier": event.tier.value, "created_at": now, "updated_at": now}
 
-    def retrieve(self, query: MemoryQuery) -> List[MemoryResult]:
+    async def store_batch(self, events: List[MemoryEvent]) -> List[Dict[str, Any]]:
+        await self.initialize()
+        pipeline = self.client.pipeline()
         results = []
         now = time.time()
-        for key in self.client.scan_iter(f"{self.prefix}*"):
-            data = self.client.get(key)
-            if not data:
+        
+        for event in events:
+            mem_id = event.id or str(uuid.uuid4())
+            metadata = event.metadata or MemoryMetadata()
+            metadata.timestamp = now
+            metadata.last_accessed_at = now
+            record = MemoryResult(
+                id=mem_id, content=event.content, score=1.0, tier=event.tier, metadata=metadata
+            )
+            pipeline.json().set(f"{self.prefix}{mem_id}", "$", record.model_dump(mode="json"))
+            results.append({"id": mem_id, "tier": event.tier.value, "created_at": now, "updated_at": now})
+            
+        await pipeline.execute()
+        return results
+
+    async def retrieve(self, query: MemoryQuery) -> List[MemoryResult]:
+        await self.initialize()
+        
+        query_parts = []
+        if query.tier:
+            query_parts.append(f"@tier:{{{query.tier.value}}}")
+        if query.tags:
+            tags_str = " | ".join(query.tags)
+            query_parts.append(f"@tags:{{{tags_str}}}")
+        if query.min_importance is not None:
+            query_parts.append(f"@importance:[{query.min_importance} +inf]")
+            
+        if query.query:
+            escaped_q = query.query.replace("-", "\\-").replace(":", "\\:")
+            query_parts.append(f"@content:({escaped_q})")
+            
+        search_query_str = " ".join(query_parts) if query_parts else "*"
+        search_query = Query(search_query_str).paging(0, query.limit)
+        
+        res = await self.client.ft(self.index_name).search(search_query)
+        
+        results = []
+        now = time.time()
+        for doc in res.docs:
+            data_str = getattr(doc, "json", getattr(doc, "$", None))
+            if not data_str:
+                data_str = doc.__dict__.get("json", doc.__dict__.get("$"))
+            if not data_str:
                 continue
-            record = MemoryResult.model_validate_json(data)
+                
+            record = MemoryResult.model_validate_json(data_str)
+            record.metadata.last_accessed_at = now
+            results.append(record)
+            
+        if results:
+            pipeline = self.client.pipeline()
+            for record in results:
+                pipeline.json().set(f"{self.prefix}{record.id}", "$.metadata.last_accessed_at", now)
+            await pipeline.execute()
+            
+        return results
 
-            if query.tier and record.tier != query.tier:
-                continue
-            if query.tags and not all(t in record.metadata.tags for t in query.tags):
-                continue
-            if (
-                query.min_importance is not None
-                and record.metadata.importance < query.min_importance
-            ):
-                continue
+    async def retrieve_batch(self, queries: List[MemoryQuery]) -> List[List[MemoryResult]]:
+        # RediSearch doesn't natively support batch search in a single command,
+        # but we can use asyncio.gather for concurrent searches.
+        return await asyncio.gather(*(self.retrieve(q) for q in queries))
 
-            score = 0.0
-            if query.query in record.content:
-                score = 1.0
-            else:
-                words = [w for w in query.query.split() if w.strip()]
-                if words:
-                    match_count = sum(1 for w in words if w in record.content)
-                    score = match_count / len(words)
-
-            if score > 0:
-                record.metadata.last_accessed_at = now
-                self.client.set(key, record.model_dump_json())
-                record.score = score
-                results.append(record)
-
-        results.sort(key=lambda x: (x.score, x.metadata.importance), reverse=True)
-        return results[: query.limit]
-
-    def delete(self, mem_id: str) -> bool:
-        return self.client.delete(f"{self.prefix}{mem_id}") > 0
+    async def delete(self, mem_id: str) -> bool:
+        return await self.client.delete(f"{self.prefix}{mem_id}") > 0
 
 
 class AMPCore:
     def __init__(self, redis_url: Optional[str] = None):
-        if redis_url and REDIS_AVAILABLE:
+        self.redis_url = redis_url
+        self.provider: Optional[StorageProvider] = None
+        self._initialized = False
+
+    async def _ensure_initialized(self):
+        if self._initialized:
+            return
+            
+        if self.redis_url and REDIS_AVAILABLE:
             try:
-                self.provider = RedisStorageProvider(redis_url)
-                self.provider.client.ping()
+                self.provider = RedisStorageProvider(self.redis_url)
+                await self.provider.initialize()
+                await self.provider.client.ping()
             except Exception as e:
                 logger.warning(
                     f"[AMP] Redis connection failed, falling back to MemoryStorageProvider: {e}"
@@ -216,15 +289,33 @@ class AMPCore:
                 self.provider = MemoryStorageProvider()
         else:
             self.provider = MemoryStorageProvider()
+            
+        self._initialized = True
 
-    def store(self, event: MemoryEvent) -> Dict[str, Any]:
-        return self.provider.store(event)
+    async def store(self, event: MemoryEvent) -> Dict[str, Any]:
+        await self._ensure_initialized()
+        assert self.provider is not None
+        return await self.provider.store(event)
 
-    def retrieve(self, query: MemoryQuery) -> List[MemoryResult]:
-        return self.provider.retrieve(query)
+    async def retrieve(self, query: MemoryQuery) -> List[MemoryResult]:
+        await self._ensure_initialized()
+        assert self.provider is not None
+        return await self.provider.retrieve(query)
 
-    def delete(self, mem_id: str) -> bool:
-        return self.provider.delete(mem_id)
+    async def delete(self, mem_id: str) -> bool:
+        await self._ensure_initialized()
+        assert self.provider is not None
+        return await self.provider.delete(mem_id)
+
+    async def store_batch(self, events: List[MemoryEvent]) -> List[Dict[str, Any]]:
+        await self._ensure_initialized()
+        assert self.provider is not None
+        return await self.provider.store_batch(events)
+
+    async def retrieve_batch(self, queries: List[MemoryQuery]) -> List[List[MemoryResult]]:
+        await self._ensure_initialized()
+        assert self.provider is not None
+        return await self.provider.retrieve_batch(queries)
 
     def get_memory_tools(self) -> List[Dict[str, Any]]:
         return [

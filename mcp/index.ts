@@ -11,6 +11,8 @@ import {
 } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
 import { AMPCore, MemoryTier } from "../dist/index.js"; 
+import express from "express";
+import cors from "cors";
 
 const amp = new AMPCore({
   redisUrl: process.env.REDIS_URL // 支持通过环境变量开启 Redis 持久化
@@ -86,10 +88,10 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     }
 
     throw new Error(`Unknown tool: ${name}`);
-  } catch (error) {
+  } catch (error: any) {
     let errorMessage = "An unknown error occurred.";
     if (error instanceof z.ZodError) {
-      errorMessage = `Invalid parameters: ${error.errors.map(e => `${e.path.join('.')}: ${e.message}`).join(', ')}`;
+      errorMessage = `Invalid parameters: ${(error as any).errors.map((e: any) => `${e.path.join('.')}: ${e.message}`).join(', ')}`;
     } else if (error instanceof Error) {
       errorMessage = error.message;
     }
@@ -104,3 +106,47 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 // 启动 StdIO 传输 (MCP 标准通信协议)
 const transport = new StdioServerTransport();
 server.connect(transport).catch(console.error);
+
+// 启动 Express 服务器，为 Chrome 扩展等提供 HTTP 安全接口
+const app = express();
+app.use(cors());
+app.use(express.json());
+
+const API_TOKEN = process.env.AMP_API_TOKEN || "default-dev-token";
+
+// HTTP Token 认证中间件
+app.use((req, res, next) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || authHeader !== `Bearer ${API_TOKEN}`) {
+    res.status(401).json({ error: "Unauthorized" });
+    return;
+  }
+  next();
+});
+
+// 接收 Chrome 扩展传递的记忆
+app.post("/memory", async (req, res) => {
+  try {
+    const parsedArgs = StoreMemorySchema.parse(req.body);
+
+    const result = await amp.store({
+      tier: parsedArgs.tier,
+      scope: { userId: "chrome-extension-user" },
+      content: parsedArgs.content,
+      metadata: { importance: parsedArgs.importance, tags: parsedArgs.tags },
+    });
+
+    res.json({ success: true, id: result.id });
+  } catch (error: any) {
+    if (error instanceof z.ZodError) {
+      res.status(400).json({ error: "Invalid parameters", details: (error as any).errors });
+    } else {
+      res.status(500).json({ error: error.message || "Internal server error" });
+    }
+  }
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.error(`[AMP HTTP] Server listening on port ${PORT} for extension memories`);
+});

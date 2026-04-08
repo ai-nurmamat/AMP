@@ -4,8 +4,8 @@ export interface MemoryScope {
     agentId?: string;
 }
 export declare enum MemoryTier {
-    WORKING = "working",// 工作记忆 (短期、频繁读写、类似于人类的短期工作区)
-    LONG_TERM = "long_term",// 长期记忆 (持久化、向量/语义深度检索)
+    WORKING = "working",// 工作记忆：针对短期、高频读写场景设计的 Scratchpad（暂存区）
+    LONG_TERM = "long_term",// 长期记忆：支持向量持久化与深度语义检索的冷数据层
     GRAPH = "graph"
 }
 export interface MemoryMetadata {

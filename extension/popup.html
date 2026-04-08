@@ -6,79 +6,173 @@
   <style>
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      width: 320px;
+      width: 360px;
       margin: 0;
       padding: 0;
-      background: #f9f9f9;
+      background: #0d1117;
+      color: #c9d1d9;
+      overflow: hidden;
     }
     .header {
-      background: #000;
-      color: #fff;
-      padding: 16px;
+      background: linear-gradient(180deg, #161b22 0%, #0d1117 100%);
+      padding: 20px 16px;
       text-align: center;
+      border-bottom: 1px solid #30363d;
+      position: relative;
     }
     .header h1 {
       margin: 0;
-      font-size: 18px;
-      letter-spacing: 1px;
+      font-size: 20px;
+      font-weight: 600;
+      letter-spacing: 2px;
+      background: -webkit-linear-gradient(#58a6ff, #1f6feb);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-transform: uppercase;
+    }
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      background: #2ea043;
+      border-radius: 50%;
+      position: absolute;
+      top: 24px;
+      right: 20px;
+      box-shadow: 0 0 8px #2ea043;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(46, 160, 67, 0.4); }
+      70% { box-shadow: 0 0 0 6px rgba(46, 160, 67, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(46, 160, 67, 0); }
     }
     .content {
-      padding: 20px;
+      padding: 24px 20px;
     }
     .stats-card {
-      background: #fff;
-      border-radius: 8px;
-      padding: 16px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
       text-align: center;
+      margin-bottom: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+    .stats-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, transparent, #58a6ff, transparent);
+    }
+    .chart-container {
+      width: 100%;
+      height: 120px;
       margin-bottom: 16px;
+      position: relative;
     }
-    .stats-card .number {
-      font-size: 32px;
-      font-weight: bold;
-      color: #2563eb;
-      margin-bottom: 4px;
-    }
-    .stats-card .label {
-      font-size: 12px;
-      color: #666;
-    }
-    .btn-sync {
+    canvas {
       display: block;
       width: 100%;
-      padding: 12px;
-      background: #2563eb;
+      height: 100%;
+    }
+    .stats-card .number {
+      font-size: 42px;
+      font-weight: 700;
       color: #fff;
+      margin-bottom: 4px;
+      text-shadow: 0 0 10px rgba(88, 166, 255, 0.5);
+      font-variant-numeric: tabular-nums;
+    }
+    .stats-card .label {
+      font-size: 13px;
+      color: #8b949e;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .controls {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .input-group {
+      display: flex;
+      align-items: center;
+      background: #0d1117;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      padding: 0 12px;
+    }
+    .input-group input {
+      background: transparent;
       border: none;
+      color: #c9d1d9;
+      padding: 10px 0;
+      width: 100%;
+      outline: none;
+      font-size: 13px;
+    }
+    .input-group input::placeholder {
+      color: #484f58;
+    }
+    .btn-sync {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 100%;
+      padding: 12px;
+      background: #238636;
+      color: #fff;
+      border: 1px solid rgba(240,246,252,0.1);
       border-radius: 6px;
       font-size: 14px;
-      font-weight: bold;
+      font-weight: 600;
       cursor: pointer;
-      transition: background 0.2s;
+      transition: all 0.2s;
     }
     .btn-sync:hover {
-      background: #1d4ed8;
+      background: #2ea043;
+      border-color: rgba(240,246,252,0.1);
+    }
+    .btn-sync:active {
+      transform: scale(0.98);
+    }
+    .btn-sync.syncing {
+      background: #1f6feb;
+      pointer-events: none;
     }
     .footer {
       text-align: center;
       font-size: 11px;
-      color: #999;
-      padding-bottom: 16px;
+      color: #484f58;
+      padding-bottom: 20px;
     }
   </style>
 </head>
 <body>
   <div class="header">
-    <h1>AMP GLOBAL MEMORY</h1>
+    <h1>AMP MEMORY</h1>
+    <div class="status-dot" title="MCP Server Active"></div>
   </div>
   
   <div class="content">
     <div class="stats-card">
-      <div class="number" id="memory-count">...</div>
-      <div class="label">Implicit Memories Captured</div>
+      <div class="chart-container">
+        <canvas id="memoryChart"></canvas>
+      </div>
+      <div class="number" id="memory-count">0</div>
+      <div class="label">Implicit Memories</div>
     </div>
     
-    <button class="btn-sync" id="btn-sync">Sync to MCP Server</button>
+    <div class="controls">
+      <div class="input-group">
+        <input type="password" id="mcp-token" placeholder="Bearer Token (Optional)" />
+      </div>
+      <button class="btn-sync" id="btn-sync">
+        <span>Force Sync to MCP</span>
+      </button>
+    </div>
   </div>
 
   <div class="footer">

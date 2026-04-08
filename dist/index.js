@@ -16,10 +16,10 @@ class AMPCore {
     constructor(config) {
         if (config?.redisUrl) {
             this.provider = new storage_1.RedisStorageProvider(config.redisUrl);
-            // 触发异步连接
+            // 触发异步连接并实现优雅降级
             if (this.provider.connect) {
                 this.provider.connect().catch(err => {
-                    console.error('[AMP] Redis connection failed, falling back to MemoryStorageProvider', err);
+                    console.error('[AMP] 工业级存储引擎连接失败，正在平滑降级至内存索引模式 (MemoryStorageProvider)', err);
                     this.provider = new storage_1.MemoryStorageProvider();
                 });
             }
@@ -29,38 +29,40 @@ class AMPCore {
         }
     }
     /**
-     * 存储记忆
+     * 存储结构化记忆事件
+     * 支持通过 Tier (层级) 和 Scope (作用域) 进行细粒度隔离
      */
     async store(event) {
         return this.provider.store(event);
     }
     /**
-     * 检索记忆
+     * 基于查询条件检索相关记忆
+     * 内部集成了基于阈值、标签和重要性的复合打分机制
      */
     async retrieve(query) {
         return this.provider.retrieve(query);
     }
     /**
-     * 更新记忆
+     * 更新已有记忆的核心内容或元数据属性
      */
     async update(id, updates) {
         return this.provider.update(id, updates);
     }
     /**
-     * 删除记忆
+     * 物理删除指定的记忆节点
      */
     async delete(id) {
         return this.provider.delete(id);
     }
     /**
-     * 获取核心记忆存储量
+     * 获取当前底层存储引擎的记忆节点总数
      */
     async getSize() {
         return this.provider.getSize();
     }
     /**
-     * 生成供 LLM Function Calling 的 Schema
-     * 赋予大模型原生的自我意识，让其能够自主管理记忆生命周期
+     * 暴露符合 LLM Function Calling 标准的 Schema 接口
+     * 赋予大模型原生的自我意识，使其能够以类操作系统分页的方式自主管理记忆生命周期
      */
     getMemoryTools() {
         return [
