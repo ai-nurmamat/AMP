@@ -1,21 +1,62 @@
 {
   "name": "amp",
   "version": "0.1.0",
-  "description": "Agent Memory Protocol - 让每一个 AI Agent 都能拥有记忆",
+  "description": "Agent Memory Protocol — 让每一个 AI Agent 都能拥有记忆",
+  "description_en": "Agent Memory Protocol — Give every AI Agent an eternal, global memory",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "module": "dist/index.js",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
   "scripts": {
     "build": "tsc",
-    "test": "jest"
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "lint": "eslint src --ext .ts",
+    "format": "prettier --write \"src/**/*.ts\"",
+    "prepublishOnly": "npm run build"
   },
   "keywords": [
     "ai",
     "agent",
     "memory",
-    "protocol"
+    "protocol",
+    "llm",
+    "openai",
+    "claude",
+    "context",
+    "vector",
+    "graph",
+    "mcp",
+    "model-context-protocol",
+    "rag",
+    "retrieval"
   ],
   "license": "MIT",
-  "author": "OpenClaw Team",
+  "author": "ai-nurmamat <nurmamat@ozluk.ai>",
+  "contributors": [
+    "Nurmamat <nurmamat@ozluk.ai>"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ai-nurmamat/AMP.git"
+  },
+  "homepage": "https://github.com/ai-nurmamat/AMP#readme",
+  "bugs": {
+    "url": "https://github.com/ai-nurmamat/AMP/issues",
+    "email": "nurmamat@ozluk.ai"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "peerDependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0"
+  },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",
     "cors": "^2.8.6",

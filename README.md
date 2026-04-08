@@ -1,58 +1,136 @@
 # AMP (Agent Memory Protocol)
 
-> **记忆是进化的本质** (Memory is the essence of evolution)
->
-> 就像生物通过记忆环境规律获得生存优势，AI 智能体也需要记忆来打破“朝生暮死”的循环。
-> **AMP (Agent Memory Protocol)** 是一款完全自主研发、颠覆行业的记忆管理引擎。我们首创了跨应用共享插件机制和图向量混合检索架构，致力于为所有 AI Agent 赋予永恒且全局的记忆中枢，成为 **AI 记忆管理领域的最顶级形态**。
+> **记忆是进化的本质** · Memory is the essence of evolution
+
+[![npm version](https://img.shields.io/npm/v/amp.svg?style=flat-square)](https://www.npmjs.com/package/amp)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](LICENSE)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?style=flat-square)](https://www.typescriptlang.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-%3E=18-green?style=flat-square)](https://nodejs.org/)
+[![Python](https://img.shields.io/badge/Python-3.8+-orange?style=flat-square)](https://python.org)
+[![Build Status](https://img.shields.io/github/actions/workflow/status/ai-nurmamat/AMP/ci.yml?style=flat-square)](.github/workflows/ci.yml)
+[![Stars](https://img.shields.io/github/stars/ai-nurmamat/AMP?style=flat-square)](https://github.com/ai-nurmamat/AMP/stargazers)
+[![Forks](https://img.shields.io/github/forks/ai-nurmamat/AMP?style=flat-square)](https://github.com/ai-nurmamat/AMP/network)
+
+**AMP (Agent Memory Protocol)** — 完全自主研发的大模型时代 AI Agent 记忆管理引擎。首创**跨生态共享机制**与**图向量双轨检索架构**，让每一个 AI Agent 都能拥有跨越会话、跨越设备、跨越平台的永恒记忆。
+
+[English](./README.md) · [中文](./README.md)
 
 ---
 
-## 🧬 核心哲学：记忆是进化的本质
+## 🎯 项目目标
+
+**5万星 ⭐** — 成为 AI Agent 记忆管理领域的标准协议
+
+---
+
+## 🧬 核心哲学
 
 在现有的 AI 交互模式中，每一次对话框的关闭，都意味着一个智能体生命周期的终结。无论你在上一次对话中与 AI 产生了多么深刻的共鸣，下一次开启时，它依然是一张白纸。
-AMP 的诞生正是为了终结这种“记忆孤岛”。我们认为，**没有记忆的 AI 永远只是工具，拥有记忆的 AI 才能进化为伙伴**。通过跨设备的意图捕获、多维度的记忆折叠以及自主换页机制，AMP 让 AI 能够像人类一样，在交互中学习、在遗忘中提炼、在岁月中进化。
+
+**AMP 的诞生正是为了终结这种"记忆孤岛"。** 我们认为：
+
+> 没有记忆的 AI 永远只是工具，拥有记忆的 AI 才能进化为伙伴。
+
+通过多维度的记忆折叠以及自主换页机制，AMP 让 AI 能够像人类一样，在交互中学习、在遗忘中提炼、在岁月中进化。
 
 ---
 
-## 🌟 颠覆性原生创新
+## 🌟 核心特性
 
-AMP 不仅仅是一个简单的 K-V 数据库或向量检索库，它是大模型时代的“**记忆操作系统**”，具备以下引领行业标准的原生核心特性：
+### 🔄 跨生态记忆共享
+- **浏览器插件** (`extension/`)：Manifest V3，原生捕获用户高亮、搜索偏好、阅读行为
+- **MCP 协议** (`mcp/`)：Model Context Protocol 标准实现，无缝接入 Claude Desktop / Cursor / 任意 MCP 客户端
+- **多语言 SDK**：TypeScript (Node.js)、Python 全平台覆盖，API 完全一致
 
-### 1. 跨应用共享与隐式捕获 (The "Memory Hub" Extension)
-传统的记忆系统受限于单一对话框（如单独的 ChatGPT 或 Cursor），而 AMP 提供了原生的 **Chrome 浏览器插件 (`extension/`)** 支持，将记忆的触角延伸至用户数字生活的每一个角落。
-- **无感记忆收集 (Implicit Capture)**：插件（基于 Manifest V3）在后台通过 `content.js` 隐式捕获用户高亮内容、阅读偏好及高频搜索行为，将其转化为携带动态权重的记忆碎片，并可在 `popup.html` 实时可视化全局意图的演变轨迹。
-- **全局打通 (MCP 革命)**：借助最新引入的 **Model Context Protocol (MCP)** 服务（位于 `mcp/` 目录），无论是网页版大模型、本地终端 Agent，还是代码编辑器（如 Cursor / Claude Desktop），都能无缝接入同一个 AMP 记忆中枢，实现真正的跨设备、跨生态上下文共享。
+### 🏗️ 三层记忆架构 (Memory Tier)
 
-### 2. OS 级的大模型记忆自治 (Autonomous LLM Paging)
-我们摒弃了“由人类硬编码规则喂给 AI 记忆”的传统模式，在业界首创了类操作系统的“内存分页机制”，并直接暴露出自研的、完美适配 OpenAI/Claude Function Calling 的 `getMemoryTools()` 接口。
-- **动态换页 (Dynamic Paging)**：大模型获得了对自己记忆的完全控制权。在面临 Context Window 上下文溢出时，模型可以自主调用工具，将低优信息“换出 (Store)”至 AMP 的长期记忆库，并在需要时精准“换入 (Retrieve)”关联的背景知识，彻底打破物理内存限制。
+```
+┌─────────────────────────────────────────────────────┐
+│                  AMP Memory System                   │
+├─────────────┬──────────────────┬────────────────────┤
+│   WORKING   │    LONG_TERM      │       GRAPH        │
+│  (工作记忆)  │    (长期记忆)      │      (图谱记忆)      │
+│             │                  │                    │
+│ Scratchpad  │ Redis + Vector   │  Neo4j / 关系推理   │
+│ 高频读写     │ 深度语义检索       │   多跳逻辑推理       │
+│ 毫秒级响应   │ 持久化存储         │   实体关系网络       │
+└─────────────┴──────────────────┴────────────────────┘
+```
 
-### 3. 向量与图谱的双轨混合检索 (Hybrid Graph-Vector Architecture)
-传统系统单纯依赖向量（Vector DB），难以处理多跳逻辑推理（Multi-hop Reasoning）和深层实体关系。
-- AMP 从设计之初就在 `MemoryTier` 中构建了三层立体的折叠架构：
-  - `working` (工作记忆)：面向短期、高频读写的 Scratchpad。
-  - `long_term` (长期记忆)：支持 Redis 全文与向量持久化的冷数据检索层。
-  - `graph` (图谱记忆)：面向复杂逻辑和实体关系的时序图谱层。这为接入 Neo4j 等图数据库，处理“A认识B，且B喜欢C”这类深层推理铺平了道路。
+### 🧠 LLM 原生自治
+- 完美适配 OpenAI / Claude Function Calling
+- `getMemoryTools()` 暴露自研工具 Schema
+- 模型自主管理记忆生命周期：自主"换入换出"，打破 Context Window 限制
 
-### 4. 艾宾浩斯遗忘曲线与动态权重 (Dynamic Importance & Consolidation)
-进化的另一个法则是“遗忘无用之物，提炼生存智慧”。
-- 每一条进入 AMP 的记忆都自带 `importance`（重要性得分）和 `lastAccessedAt`（最后访问时间戳）。
-- 伴随用户的持续交互，高频唤醒的记忆其权重会自动攀升并被固化；而低价值的冗余信息则会遵循艾宾浩斯遗忘曲线随时间自然衰减降级（Memory Consolidation），确保检索效率与上下文的纯净度永远保持在巅峰状态。
+### 📉 艾宾浩斯遗忘曲线
+- `importance` + `lastAccessedAt` 双驱动
+- 高频唤醒 → 权重固化
+- 低价值信息 → 自然衰减降级
 
 ---
 
-## 🏗️ 架构与多语言生态支持
+## 🏛️ 架构图
 
-为了满足最极客的开发者和覆盖全场景的 AI 应用，AMP 提供了高度一致的多语言核心实现：
+```
+                                    ┌──────────────────┐
+                                    │   AI Agent       │
+                                    │  (任意大模型)     │
+                                    └────────┬─────────┘
+                                             │ Function Calling
+                                             │ getMemoryTools()
+                                    ┌────────▼─────────┐
+                                    │   AMP Core       │
+                                    │  ┌────────────┐  │
+                                    │  │ MemoryTier │  │
+                                    │  │ WORKING    │  │
+                                    │  │ LONG_TERM  │  │
+                                    │  │ GRAPH      │  │
+                                    │  └────────────┘  │
+                                    └────────┬─────────┘
+                                             │
+                         ┌───────────────────┼───────────────────┐
+                         │                   │                    │
+              ┌──────────▼──────┐  ┌────────▼──────┐  ┌────────▼──────┐
+              │ MemoryProvider  │  │RedisProvider │  │ GraphProvider │
+              │  (内存模式)      │  │(工业级模式)   │  │  (图谱模式)    │
+              └─────────────────┘  └───────────────┘  └───────────────┘
+```
 
-### 📦 1. TypeScript / Node.js 核心库 (`/src`)
-最契合前端及浏览器生态的实现，支持纯内存及 Redis 工业级引擎的平滑降级。
+---
+
+## 📦 安装
+
+### TypeScript / Node.js
+
+```bash
+npm install amp
+# 或
+yarn add amp
+# 或
+pnpm add amp
+```
+
+### Python
+
+```bash
+pip install amp-memory
+# 或从源码安装
+cd python && pip install -e .
+```
+
+---
+
+## 🚀 快速开始
+
+### TypeScript / Node.js
+
 ```typescript
-import { AMPCore, MemoryTier } from 'amp';
+import { AMPCore, MemoryTier, MemoryScope, MemoryMetadata } from 'amp';
 
+// 初始化 — 自动降级（Redis → 内存）
 const amp = new AMPCore({ redisUrl: 'redis://localhost:6379' });
 
-// 存储一条影响深远的长期记忆
+// 存储一条长期记忆
 await amp.store({
   tier: MemoryTier.LONG_TERM,
   scope: { userId: 'global-user' },
@@ -60,53 +138,184 @@ await amp.store({
   metadata: { importance: 0.9, tags: ['tech', 'preference'] }
 });
 
-// 提取大模型工具链
+// 获取 LLM 工具链
 const tools = amp.getMemoryTools();
+
+// 检索记忆
+const results = await amp.retrieve({
+  query: 'TypeScript 偏好',
+  limit: 5
+});
+
+// 更新记忆
+await amp.update(results[0].id, {
+  content: '用户偏好使用 TypeScript 编写高并发服务端代码，最近开始学习 Rust。',
+  metadata: { importance: 0.95 }
+});
+
+// 删除记忆
+await amp.delete(results[0].id);
 ```
 
-### 🐍 2. Python 核心库 (`/python`)
-为 AI Native 开发者及数据科学家量身定制。完美集成 Pydantic 类型强校验，且已通过 `setup.py` 标准化打包，可直接发布至 PyPI。支持 `asyncio` 异步高并发。
+### Python
+
 ```python
 import asyncio
 from amp import AMPCore, MemoryEvent, MemoryTier, MemoryScope, MemoryMetadata
 
 async def main():
     amp_core = AMPCore()
+
     await amp_core.store(MemoryEvent(
         tier=MemoryTier.WORKING,
         scope=MemoryScope(user_id="global-user"),
-        content="正在开发一个颠覆性的 AI 记忆协议，记忆是进化的本质。",
-        metadata=MemoryMetadata(importance=0.95, tags=["project", "philosophy"])
+        content="正在开发一个颠覆性的 AI 记忆协议。",
+        metadata=MemoryMetadata(importance=0.95, tags=["project", "AI"])
     ))
 
-    # 直接获取 LLM Tools，挂载给 GPT-4 或 Claude
     tools = amp_core.get_memory_tools()
+    print(f"LLM 工具数: {len(tools)}")
+
+    results = await amp_core.retrieve(MemoryQuery(query="AI 记忆协议"))
+    for r in results:
+        print(f"  [{r.score:.2f}] {r.content[:60]}...")
 
 asyncio.run(main())
 ```
 
-### 🌐 3. MCP 记忆服务器 (`/mcp`)
-颠覆性特性！基于 Anthropic 的 Model Context Protocol (MCP) 标准，让所有兼容 MCP 的客户端（如 Claude Desktop）直接连通 AMP 的全局记忆网络。
-- 启动服务器：`node mcp/index.ts`
-- 即可在 IDE 或 AI 助手中直接呼出 `amp_store_memory` 与 `amp_retrieve_memory` 专属工具。
+### MCP (Model Context Protocol)
 
-### 🧩 4. Chrome 浏览器插件锚点 (`/extension`)
-无需编写一行代码即可部署的全局记忆收集器。
-- `content.js` 负责拦截 DOM 事件并自动提取交互意图（停留、高亮）。
-- `background.js` 中的隐式记忆处理引擎负责计算动态权重。
-- `popup.html` 提供精美的可视化面板，展示记忆增长曲线。
+```bash
+# 启动 MCP 服务器
+node mcp/index.ts
+```
+
+然后在 Claude Desktop 或 Cursor 中配置：
+
+```json
+{
+  "mcpServers": {
+    "amp": {
+      "command": "node",
+      "args": ["/path/to/mcp/index.js"]
+    }
+  }
+}
+```
+
+### Chrome 浏览器插件
+
+```bash
+# 加载插件
+# 1. 打开 chrome://extensions/
+# 2. 开启"开发者模式"
+# 3. 点击"加载已解压的扩展程序"
+# 4. 选择 extension/ 目录
+```
 
 ---
 
-## 🎯 发展愿景
+## 📁 项目结构
 
-AMP 的最终形态是成为 **AI 时代的 HTTP**。
-就像今天所有的浏览器都通过 HTTP 协议获取网页资源一样，未来成千上万的智能体（Agents）都将通过 **AMP** 协议握手。它们将无缝同步人类的偏好、事实与历史，让用户不再需要向每一个新诞生的 AI 重复解释“我是谁，我需要什么”。
-
-**记忆是进化的本质，而 AMP，正是推动 AI 完成下一次进化的基石。**
+```
+AMP/
+├── README.md              # 本文件
+├── LICENSE                # MIT License
+├── package.json           # npm 包配置
+├── tsconfig.json          # TypeScript 配置
+├── jest.config.js         # Jest 测试配置
+│
+├── src/                   # TypeScript 核心源码
+│   ├── index.ts           # AMPCore 主入口
+│   ├── storage.ts         # 存储引擎 (Memory / Redis)
+│   ├── types.ts           # 类型定义
+│   └── __tests__/         # 单元测试
+│
+├── dist/                  # 编译产物 (npm 发布用)
+│
+├── mcp/                   # Model Context Protocol 实现
+│   └── index.ts           # MCP 服务器入口
+│
+├── extension/              # Chrome 浏览器插件
+│   ├── manifest.json       # Manifest V3 配置
+│   ├── popup.html          # 记忆可视化面板
+│   └── src/
+│       ├── background.js   # Service Worker
+│       ├── content.js     # 内容脚本 (隐式捕获)
+│       └── popup.js       # 面板逻辑
+│
+├── python/                 # Python 实现
+│   ├── amp/
+│   │   └── __init__.py    # 核心实现
+│   ├── tests/
+│   │   └── test_amp.py    # 单元测试
+│   └── setup.py            # PyPI 发布配置
+│
+└── .github/
+    └── workflows/
+        └── ci.yml          # GitHub Actions CI
+```
 
 ---
 
-## 📄 许可证
+## 🔌 API 概览
 
-MIT License - Open Source for the AI Community.
+### MemoryTier (记忆层级)
+
+| Tier | 说明 | 适用场景 |
+|------|------|---------|
+| `WORKING` | 工作记忆 (Scratchpad) | 短期、高频读写 |
+| `LONG_TERM` | 长期记忆 (向量检索) | 持久化、语义搜索 |
+| `GRAPH` | 图谱记忆 (关系推理) | 复杂逻辑、多跳推理 |
+
+### 核心方法
+
+| 方法 | 说明 |
+|------|------|
+| `amp.store(event)` | 存储记忆事件 |
+| `amp.retrieve(query)` | 检索相关记忆 |
+| `amp.update(id, updates)` | 更新记忆 |
+| `amp.delete(id)` | 删除记忆 |
+| `amp.getSize()` | 获取记忆总数 |
+| `amp.getMemoryTools()` | 获取 LLM Function Calling Schema |
+
+---
+
+## 🧪 测试
+
+```bash
+# Node.js 测试
+npm test
+
+# Python 测试
+cd python && pytest tests/
+```
+
+---
+
+## 🌐 相关项目
+
+| 项目 | 描述 | Stars |
+|------|------|-------|
+| [tradememory-protocol](https://github.com/mnemox-ai/tradememory-protocol) | 交易 Agent 记忆协议 | 502 |
+| [LightAgent](https://github.com/wanxingai/LightAgent) | 轻量级 Agent 框架 | 820 |
+| [icarus-daedalus](https://github.com/esaradev/icarus-daedalus) | 通用 Agent 记忆 (50行) | 249 |
+| [mcp-memory-libsql](https://github.com/spences10/mcp-memory-libsql) | libSQL 向量记忆 | 82 |
+
+---
+
+## 🤝 贡献
+
+欢迎提交 Issue 和 Pull Request！
+
+请阅读 [Pull Request 模板](./.github/PULL_REQUEST_TEMPLATE.md) 和 [Bug 报告模板](./.github/ISSUE_TEMPLATE/bug_report.md)。
+
+---
+
+## 📜 License
+
+MIT License - 详见 [LICENSE](./LICENSE)
+
+---
+
+**⭐ 如果这个项目对你有帮助，请给我们一个星！**
