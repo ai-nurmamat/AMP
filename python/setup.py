@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(
-    name="amp-memory",
+    name="agent-memory-protocol",
     version="1.0.0",
     author="OpenClaw Team",
     author_email="founders@openclaw.ai",

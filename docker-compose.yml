@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  redis:
+    image: redis/redis-stack-server:latest
+    container_name: amp-redis
+    ports:
+      - "6379:6379"
+      - "8001:8001" # RedisInsight UI (可选)
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    environment:
+      - REDIS_ARGS=--appendonly yes
+
+volumes:
+  redis_data:

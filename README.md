@@ -103,29 +103,40 @@
 ### TypeScript / Node.js
 
 ```bash
-npm install amp
-# 或
-yarn add amp
-# 或
-pnpm add amp
+# 方式一：从 GitHub 直接安装（推荐）
+npm install github:ai-nurmamat/AMP
+
+# 方式二：克隆源码
+git clone https://github.com/ai-nurmamat/AMP.git
+cd AMP
+npm install
+npm run build
 ```
 
 ### Python
 
 ```bash
-pip install amp-memory
-# 或从源码安装
-cd python && pip install -e .
+# 从源码安装
+git clone https://github.com/ai-nurmamat/AMP.git
+cd AMP/python
+pip install -e .
 ```
 
 ---
 
-## 🚀 快速开始
+## 🐳 Docker 快速部署 (Redis)
+
+AMP 依赖 Redis 和 RediSearch/RedisJSON 模块。你可以使用提供的 `docker-compose.yml` 快速启动一个兼容的环境：
+
+```bash
+# 启动包含 RedisJSON & RediSearch 的 Redis 实例
+docker-compose up -d
+```
 
 ### TypeScript / Node.js
 
 ```typescript
-import { AMPCore, MemoryTier, MemoryScope, MemoryMetadata } from 'amp';
+import { AMPCore, MemoryTier, MemoryScope, MemoryMetadata } from 'agent-memory-protocol';
 
 // 初始化 — 自动降级（Redis → 内存）
 const amp = new AMPCore({ redisUrl: 'redis://localhost:6379' });
