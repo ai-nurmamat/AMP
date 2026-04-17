@@ -1,5 +1,6 @@
 import { createClient, RedisClientType } from 'redis';
 import { MemoryEvent, MemoryQuery, MemoryResult, MemoryRef } from './types.js';
+import * as crypto from 'crypto';
 
 export interface IStorageProvider {
   store(event: MemoryEvent): Promise<MemoryRef>;

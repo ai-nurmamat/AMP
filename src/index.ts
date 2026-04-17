@@ -7,9 +7,10 @@
  */
 
 import { IStorageProvider, FileStorageProvider, RedisStorageProvider } from './storage.js';
-import { MemoryEvent, MemoryQuery, MemoryResult, MemoryRef, MemoryToolSchema, MemoryTier, MemoryScope, MemoryMetadata } from './types.js';
+import { MemoryTier, MemoryScope, MemoryMetadata, MemoryEvent, MemoryQuery, MemoryResult, MemoryRef, MemoryToolSchema } from './types.js';
 
-export { MemoryTier, MemoryScope, MemoryMetadata, MemoryEvent, MemoryQuery, MemoryResult, MemoryRef, MemoryToolSchema };
+export { MemoryTier };
+export type { MemoryScope, MemoryMetadata, MemoryEvent, MemoryQuery, MemoryResult, MemoryRef, MemoryToolSchema };
 
 export interface AMPConfig {
   redisUrl?: string; // 若提供有效的 Redis URL，系统将自动激活工业级持久化引擎；否则将平滑回退至高级内存索引模式

@@ -1,29 +1,53 @@
 {
-  "497e5808-627a-422d-8387-e2030bc8a4dc": {
-    "id": "497e5808-627a-422d-8387-e2030bc8a4dc",
-    "content": "test memory",
+  "dc823988-07ef-49a4-8315-9fbdabcf65e1": {
+    "id": "dc823988-07ef-49a4-8315-9fbdabcf65e1",
+    "content": "Shared content",
     "score": 1,
-    "tier": "long_term",
+    "tier": "working",
     "metadata": {
       "importance": 0.5,
-      "tags": [],
-      "timestamp": 1776424358444,
-      "last_accessed_at": null,
-      "extra": {}
+      "tags": [
+        "test"
+      ],
+      "timestamp": 1776426312037,
+      "lastAccessedAt": 1776426312271
     }
   },
-  "984f4d3d-f3b4-4967-a479-6a9207f57802": {
-    "id": "984f4d3d-f3b4-4967-a479-6a9207f57802",
-    "content": "用户在晚上喜欢听爵士乐，并且擅长使用 Python 开发跨 Agent 系统。",
+  "c7cbdf5e-5ff5-4f2c-b3e4-c1be1b7db3e6": {
+    "id": "c7cbdf5e-5ff5-4f2c-b3e4-c1be1b7db3e6",
+    "content": "The user loves apples",
     "score": 1,
-    "tier": "long_term",
+    "tier": "working",
     "metadata": {
       "importance": 0.5,
       "tags": [],
-      "timestamp": 1776424737.490431,
-      "last_accessed_at": 1776424738.4925737,
-      "extra": {},
-      "lastAccessedAt": 1776424764922
+      "timestamp": 1776426312263,
+      "lastAccessedAt": 1776426312263
+    }
+  },
+  "f961b7be-409e-4f49-951a-25c71e451fa1": {
+    "id": "f961b7be-409e-4f49-951a-25c71e451fa1",
+    "content": "The user hates bananas",
+    "score": 1,
+    "tier": "working",
+    "metadata": {
+      "importance": 0.5,
+      "tags": [],
+      "timestamp": 1776426312265,
+      "lastAccessedAt": 1776426312268
+    }
+  },
+  "29f4cd29-fdc0-420c-a6ba-77c5c3fa26a2": {
+    "id": "29f4cd29-fdc0-420c-a6ba-77c5c3fa26a2",
+    "content": "New content",
+    "score": 1,
+    "tier": "working",
+    "metadata": {
+      "importance": 0.5,
+      "tags": [],
+      "timestamp": 1776426312269,
+      "lastAccessedAt": 1776426312271,
+      "updated_at": 1776426312270
     }
   }
 }

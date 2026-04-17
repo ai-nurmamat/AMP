@@ -21,7 +21,7 @@
     "start": "node --experimental-modules mcp/index.ts",
     "demo": "node demo.js",
     "build": "tsc",
-    "test": "jest",
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
     "test:watch": "jest --watch",
     "lint": "eslint src/**/*.ts",
     "format": "prettier --write \"src/**/*.ts\"",

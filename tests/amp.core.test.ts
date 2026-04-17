@@ -3,10 +3,12 @@
  * Tests for AMPCore, MemoryStorageProvider, and all public APIs
  */
 
-import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
+import { describe, it, expect, beforeEach } from '@jest/globals';
 import {
   AMPCore,
-  MemoryTier,
+  MemoryTier
+} from '../src/index.js';
+import type {
   MemoryScope,
   MemoryMetadata,
   MemoryEvent,
@@ -14,7 +16,7 @@ import {
   MemoryResult,
   MemoryRef,
   MemoryToolSchema,
-} from '../src/index.js';
+} from '../src/types.js';
 
 // ============================================================
 // Test Helper Types
@@ -23,8 +25,8 @@ function createTestMemory(overrides: Partial<MemoryEvent> = {}): MemoryEvent {
   return {
     tier: MemoryTier.WORKING,
     scope: { sessionId: 'test-session' },
-    content: 'Test memory content',
-    metadata: { importance: 0.5, tags: ['test'], timestamp: Date.now() },
+    content: 'test memory content',
+    metadata: { importance: 0.5, tags: ['test'], timestamp: Date.now(), ...overrides.metadata },
     ...overrides,
   };
 }
@@ -32,10 +34,18 @@ function createTestMemory(overrides: Partial<MemoryEvent> = {}): MemoryEvent {
 // ============================================================
 // AMPCore Basic Functionality
 // ============================================================
+import * as fs from 'fs';
+import * as path from 'path';
+
+const memoryFile = path.join(process.cwd(), 'amp_memory.json');
+
 describe('AMPCore', () => {
   let amp: AMPCore;
 
   beforeEach(() => {
+    if (fs.existsSync(memoryFile)) {
+      fs.unlinkSync(memoryFile);
+    }
     amp = new AMPCore();
   });
 
@@ -315,6 +325,9 @@ describe('Memory Scope Isolation', () => {
   let amp: AMPCore;
 
   beforeEach(() => {
+    if (fs.existsSync(memoryFile)) {
+      fs.unlinkSync(memoryFile);
+    }
     amp = new AMPCore();
   });
 
@@ -364,6 +377,9 @@ describe('Memory Tier Behavior', () => {
   let amp: AMPCore;
 
   beforeEach(() => {
+    if (fs.existsSync(memoryFile)) {
+      fs.unlinkSync(memoryFile);
+    }
     amp = new AMPCore();
   });
 
@@ -393,6 +409,9 @@ describe('Edge Cases', () => {
   let amp: AMPCore;
 
   beforeEach(() => {
+    if (fs.existsSync(memoryFile)) {
+      fs.unlinkSync(memoryFile);
+    }
     amp = new AMPCore();
   });
 
@@ -441,6 +460,12 @@ describe('Edge Cases', () => {
 // Concurrent Operations
 // ============================================================
 describe('Concurrent Operations', () => {
+  beforeEach(() => {
+    if (fs.existsSync(memoryFile)) {
+      fs.unlinkSync(memoryFile);
+    }
+  });
+
   it('should handle concurrent store operations', async () => {
     const amp = new AMPCore();
     const promises = Array.from({ length: 50 }, (_, i) =>
