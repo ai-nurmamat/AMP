@@ -2,7 +2,6 @@
 
 > **Memory is the essence of evolution. / 记忆是进化的本质**
 
-[![npm version](https://img.shields.io/npm/v/agent-memory-protocol.svg?style=flat-square)](https://www.npmjs.com/package/agent-memory-protocol)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?style=flat-square)](https://www.typescriptlang.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-%3E=18-green?style=flat-square)](https://nodejs.org/)
