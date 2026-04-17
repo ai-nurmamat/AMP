@@ -8,8 +8,12 @@ export interface IStorageProvider {
     connect?(): Promise<void>;
     disconnect?(): Promise<void>;
 }
-export declare class MemoryStorageProvider implements IStorageProvider {
+export declare class FileStorageProvider implements IStorageProvider {
     private storeMap;
+    private filePath;
+    constructor(filePath?: string);
+    private loadFromFile;
+    private saveToFile;
     store(event: MemoryEvent): Promise<MemoryRef>;
     retrieve(query: MemoryQuery): Promise<MemoryResult[]>;
     update(id: string, updates: Partial<MemoryEvent>): Promise<MemoryRef | null>;

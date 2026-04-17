@@ -98,9 +98,34 @@ class StorageProvider:
         raise NotImplementedError
 
 
-class MemoryStorageProvider(StorageProvider):
-    def __init__(self):
+class FileStorageProvider(StorageProvider):
+    def __init__(self, file_path: str = "amp_memory.json"):
+        import os
+        import json
+        self.file_path = file_path
         self._store: Dict[str, MemoryResult] = {}
+        self._load_from_file()
+
+    def _load_from_file(self):
+        import os
+        import json
+        if os.path.exists(self.file_path):
+            try:
+                with open(self.file_path, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                    for k, v in data.items():
+                        self._store[k] = MemoryResult(**v)
+            except Exception as e:
+                logger.warning(f"[AMP] Failed to load memory from file: {e}")
+
+    def _save_to_file(self):
+        import json
+        try:
+            with open(self.file_path, 'w', encoding='utf-8') as f:
+                data = {k: v.model_dump() for k, v in self._store.items()}
+                json.dump(data, f, ensure_ascii=False, indent=2)
+        except Exception as e:
+            logger.warning(f"[AMP] Failed to save memory to file: {e}")
 
     async def store(self, event: MemoryEvent) -> Dict[str, Any]:
         mem_id = event.id or str(uuid.uuid4())
@@ -112,10 +137,15 @@ class MemoryStorageProvider(StorageProvider):
             id=mem_id, content=event.content, score=1.0, tier=event.tier, metadata=metadata
         )
         self._store[mem_id] = record
+        self._save_to_file()
         return {"id": mem_id, "tier": event.tier.value, "created_at": now, "updated_at": now}
 
     async def store_batch(self, events: List[MemoryEvent]) -> List[Dict[str, Any]]:
-        return [await self.store(event) for event in events]
+        results = []
+        for event in events:
+            res = await self.store(event)
+            results.append(res)
+        return results
 
     async def retrieve(self, query: MemoryQuery) -> List[MemoryResult]:
         results = []
@@ -146,6 +176,7 @@ class MemoryStorageProvider(StorageProvider):
                 results.append(record)
 
         results.sort(key=lambda x: (x.score, x.metadata.importance), reverse=True)
+        self._save_to_file()
         return results[: query.limit]
 
     async def retrieve_batch(self, queries: List[MemoryQuery]) -> List[List[MemoryResult]]:
@@ -154,8 +185,10 @@ class MemoryStorageProvider(StorageProvider):
     async def delete(self, mem_id: str) -> bool:
         if mem_id in self._store:
             del self._store[mem_id]
+            self._save_to_file()
             return True
         return False
+
 
 
 class RedisStorageProvider(StorageProvider):
@@ -284,11 +317,11 @@ class AMPCore:
                 await self.provider.client.ping()
             except Exception as e:
                 logger.warning(
-                    f"[AMP] Redis connection failed, falling back to MemoryStorageProvider: {e}"
+                    f"[AMP] Redis connection failed, falling back to FileStorageProvider: {e}"
                 )
-                self.provider = MemoryStorageProvider()
+                self.provider = FileStorageProvider()
         else:
-            self.provider = MemoryStorageProvider()
+            self.provider = FileStorageProvider()
             
         self._initialized = True
 

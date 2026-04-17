@@ -1,0 +1,9 @@
+README.md
+setup.py
+agent_memory_protocol.egg-info/PKG-INFO
+agent_memory_protocol.egg-info/SOURCES.txt
+agent_memory_protocol.egg-info/dependency_links.txt
+agent_memory_protocol.egg-info/requires.txt
+agent_memory_protocol.egg-info/top_level.txt
+amp/__init__.py
+tests/test_amp.py

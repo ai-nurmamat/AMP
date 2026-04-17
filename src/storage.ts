@@ -11,8 +11,40 @@ export interface IStorageProvider {
   disconnect?(): Promise<void>;
 }
 
-export class MemoryStorageProvider implements IStorageProvider {
+import * as fs from 'fs';
+import * as path from 'path';
+
+export class FileStorageProvider implements IStorageProvider {
   private storeMap: Map<string, MemoryResult> = new Map();
+  private filePath: string;
+
+  constructor(filePath: string = path.join(process.cwd(), 'amp_memory.json')) {
+    this.filePath = filePath;
+    this.loadFromFile();
+  }
+
+  private loadFromFile() {
+    if (fs.existsSync(this.filePath)) {
+      try {
+        const data = fs.readFileSync(this.filePath, 'utf-8');
+        const parsed = JSON.parse(data);
+        for (const [k, v] of Object.entries(parsed)) {
+          this.storeMap.set(k, v as MemoryResult);
+        }
+      } catch (err) {
+        console.error('[AMP] Failed to load memory from file:', err);
+      }
+    }
+  }
+
+  private saveToFile() {
+    try {
+      const obj = Object.fromEntries(this.storeMap);
+      fs.writeFileSync(this.filePath, JSON.stringify(obj, null, 2), 'utf-8');
+    } catch (err) {
+      console.error('[AMP] Failed to save memory to file:', err);
+    }
+  }
 
   async store(event: MemoryEvent): Promise<MemoryRef> {
     const id = event.id || crypto.randomUUID();
@@ -31,6 +63,7 @@ export class MemoryStorageProvider implements IStorageProvider {
       }
     };
     this.storeMap.set(id, memoryRecord);
+    this.saveToFile();
     return { id, tier: event.tier, created_at: now, updated_at: now };
   }
 
@@ -63,6 +96,7 @@ export class MemoryStorageProvider implements IStorageProvider {
       return b.metadata.importance - a.metadata.importance;
     });
 
+    this.saveToFile();
     return results.slice(0, query.limit || 10);
   }
 
@@ -77,11 +111,14 @@ export class MemoryStorageProvider implements IStorageProvider {
     const now = Date.now();
     record.metadata.updated_at = now;
     this.storeMap.set(id, record);
+    this.saveToFile();
     return { id, tier: record.tier, created_at: record.metadata.timestamp, updated_at: now };
   }
 
   async delete(id: string): Promise<boolean> {
-    return this.storeMap.delete(id);
+    const deleted = this.storeMap.delete(id);
+    if (deleted) this.saveToFile();
+    return deleted;
   }
 
   async getSize(): Promise<number> {

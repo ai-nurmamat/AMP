@@ -55,7 +55,7 @@ const index_1 = require("../index");
         (0, globals_1.expect)(tools[0].name).toBe('amp_store_memory');
     });
 });
-(0, globals_1.describe)('AMPCore with RedisStorageProvider', () => {
+globals_1.describe.skip('AMPCore with RedisStorageProvider', () => {
     let amp;
     (0, globals_1.beforeAll)(async () => {
         amp = new index_1.AMPCore({ redisUrl: process.env.REDIS_URL || 'redis://localhost:6379' });

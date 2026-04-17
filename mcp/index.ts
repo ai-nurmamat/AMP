@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+#!/usr/bin/env node --experimental-modules
 /**
  * AMP MCP (Model Context Protocol) Server
  * 颠覆性创新：让任何支持 MCP 的客户端 (Cursor, Claude Desktop 等) 都可以直接连接全局记忆。
@@ -124,14 +124,14 @@ app.use((req, res, next) => {
   next();
 });
 
-// 接收 Chrome 扩展传递的记忆
+// REST API: 存储记忆
 app.post("/memory", async (req, res) => {
   try {
     const parsedArgs = StoreMemorySchema.parse(req.body);
 
     const result = await amp.store({
       tier: parsedArgs.tier,
-      scope: { userId: "chrome-extension-user" },
+      scope: { userId: req.body.userId || "api-user" },
       content: parsedArgs.content,
       metadata: { importance: parsedArgs.importance, tags: parsedArgs.tags },
     });
@@ -146,7 +146,47 @@ app.post("/memory", async (req, res) => {
   }
 });
 
+// REST API: 检索记忆
+app.post("/retrieve", async (req, res) => {
+  try {
+    const parsedArgs = RetrieveMemorySchema.parse(req.body);
+    const results = await amp.retrieve({ query: parsedArgs.query, limit: parsedArgs.limit });
+    res.json({ success: true, data: results });
+  } catch (error: any) {
+    if (error instanceof z.ZodError) {
+      res.status(400).json({ error: "Invalid parameters", details: (error as any).errors });
+    } else {
+      res.status(500).json({ error: error.message || "Internal server error" });
+    }
+  }
+});
+
+// REST API: 更新记忆
+app.put("/memory/:id", async (req, res) => {
+  try {
+    const result = await amp.update(req.params.id, req.body);
+    if (!result) {
+      res.status(404).json({ error: "Memory not found" });
+      return;
+    }
+    res.json({ success: true, data: result });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || "Internal server error" });
+  }
+});
+
+// REST API: 删除记忆
+app.delete("/memory/:id", async (req, res) => {
+  try {
+    const result = await amp.delete(req.params.id);
+    res.json({ success: result });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || "Internal server error" });
+  }
+});
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.error(`[AMP HTTP] Server listening on port ${PORT} for extension memories`);
+  console.error(`[AMP HTTP] Server listening on port ${PORT} for REST APIs`);
 });
+

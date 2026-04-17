@@ -19,13 +19,13 @@ class AMPCore {
             // 触发异步连接并实现优雅降级
             if (this.provider.connect) {
                 this.provider.connect().catch(err => {
-                    console.error('[AMP] 工业级存储引擎连接失败，正在平滑降级至内存索引模式 (MemoryStorageProvider)', err);
-                    this.provider = new storage_1.MemoryStorageProvider();
+                    console.error('[AMP] 工业级存储引擎连接失败，正在平滑降级至文件持久化索引模式 (FileStorageProvider)', err);
+                    this.provider = new storage_1.FileStorageProvider();
                 });
             }
         }
         else {
-            this.provider = new storage_1.MemoryStorageProvider();
+            this.provider = new storage_1.FileStorageProvider();
         }
     }
     /**

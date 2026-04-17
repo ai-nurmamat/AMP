@@ -1,0 +1,28 @@
+{
+  "24c7d9a1-c618-4b19-b3cc-95f59ab1bb74": {
+    "id": "24c7d9a1-c618-4b19-b3cc-95f59ab1bb74",
+    "content": "The user loves apples",
+    "score": 1.0,
+    "tier": "working",
+    "metadata": {
+      "importance": 0.5,
+      "tags": [],
+      "timestamp": 1776424327.8773744,
+      "last_accessed_at": 1776424327.877754,
+      "extra": {}
+    }
+  },
+  "bfca20cb-9024-4f2c-b744-7d0e35b93950": {
+    "id": "bfca20cb-9024-4f2c-b744-7d0e35b93950",
+    "content": "Fallback test content",
+    "score": 1.0,
+    "tier": "long_term",
+    "metadata": {
+      "importance": 0.5,
+      "tags": [],
+      "timestamp": 1776424327.8829067,
+      "last_accessed_at": 1776424327.8831491,
+      "extra": {}
+    }
+  }
+}

@@ -1,9 +1,72 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.RedisStorageProvider = exports.MemoryStorageProvider = void 0;
+exports.RedisStorageProvider = exports.FileStorageProvider = void 0;
 const redis_1 = require("redis");
-class MemoryStorageProvider {
+const fs = __importStar(require("fs"));
+const path = __importStar(require("path"));
+class FileStorageProvider {
     storeMap = new Map();
+    filePath;
+    constructor(filePath = path.join(process.cwd(), 'amp_memory.json')) {
+        this.filePath = filePath;
+        this.loadFromFile();
+    }
+    loadFromFile() {
+        if (fs.existsSync(this.filePath)) {
+            try {
+                const data = fs.readFileSync(this.filePath, 'utf-8');
+                const parsed = JSON.parse(data);
+                for (const [k, v] of Object.entries(parsed)) {
+                    this.storeMap.set(k, v);
+                }
+            }
+            catch (err) {
+                console.error('[AMP] Failed to load memory from file:', err);
+            }
+        }
+    }
+    saveToFile() {
+        try {
+            const obj = Object.fromEntries(this.storeMap);
+            fs.writeFileSync(this.filePath, JSON.stringify(obj, null, 2), 'utf-8');
+        }
+        catch (err) {
+            console.error('[AMP] Failed to save memory to file:', err);
+        }
+    }
     async store(event) {
         const id = event.id || crypto.randomUUID();
         const now = Date.now();
@@ -21,6 +84,7 @@ class MemoryStorageProvider {
             }
         };
         this.storeMap.set(id, memoryRecord);
+        this.saveToFile();
         return { id, tier: event.tier, created_at: now, updated_at: now };
     }
     async retrieve(query) {
@@ -53,6 +117,7 @@ class MemoryStorageProvider {
                 return b.score - a.score;
             return b.metadata.importance - a.metadata.importance;
         });
+        this.saveToFile();
         return results.slice(0, query.limit || 10);
     }
     async update(id, updates) {
@@ -69,16 +134,20 @@ class MemoryStorageProvider {
         const now = Date.now();
         record.metadata.updated_at = now;
         this.storeMap.set(id, record);
+        this.saveToFile();
         return { id, tier: record.tier, created_at: record.metadata.timestamp, updated_at: now };
     }
     async delete(id) {
-        return this.storeMap.delete(id);
+        const deleted = this.storeMap.delete(id);
+        if (deleted)
+            this.saveToFile();
+        return deleted;
     }
     async getSize() {
         return this.storeMap.size;
     }
 }
-exports.MemoryStorageProvider = MemoryStorageProvider;
+exports.FileStorageProvider = FileStorageProvider;
 class RedisStorageProvider {
     client;
     prefix = 'amp:memory:';

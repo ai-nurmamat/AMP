@@ -1,0 +1,14 @@
+{
+  "497e5808-627a-422d-8387-e2030bc8a4dc": {
+    "id": "497e5808-627a-422d-8387-e2030bc8a4dc",
+    "content": "test memory",
+    "score": 1,
+    "tier": "long_term",
+    "metadata": {
+      "importance": 0.5,
+      "tags": [],
+      "timestamp": 1776424358444,
+      "lastAccessedAt": 1776424358444
+    }
+  }
+}

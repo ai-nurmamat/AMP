@@ -6,7 +6,7 @@
  * 致力于成为 AI 记忆管理领域的最顶级形态。
  */
 
-import { IStorageProvider, MemoryStorageProvider, RedisStorageProvider } from './storage';
+import { IStorageProvider, FileStorageProvider, RedisStorageProvider } from './storage';
 import { MemoryEvent, MemoryQuery, MemoryResult, MemoryRef, MemoryToolSchema, MemoryTier, MemoryScope, MemoryMetadata } from './types';
 
 export { MemoryTier, MemoryScope, MemoryMetadata, MemoryEvent, MemoryQuery, MemoryResult, MemoryRef, MemoryToolSchema };
@@ -24,12 +24,12 @@ export class AMPCore {
       // 触发异步连接并实现优雅降级
       if (this.provider.connect) {
         this.provider.connect().catch(err => {
-          console.error('[AMP] 工业级存储引擎连接失败，正在平滑降级至内存索引模式 (MemoryStorageProvider)', err);
-          this.provider = new MemoryStorageProvider();
+          console.error('[AMP] 工业级存储引擎连接失败，正在平滑降级至文件持久化索引模式 (FileStorageProvider)', err);
+          this.provider = new FileStorageProvider();
         });
       }
     } else {
-      this.provider = new MemoryStorageProvider();
+      this.provider = new FileStorageProvider();
     }
   }
 
