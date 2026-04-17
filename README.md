@@ -7,6 +7,9 @@
 [![Node.js](https://img.shields.io/badge/Node.js-%3E=18-green?style=flat-square)](https://nodejs.org/)
 [![Python](https://img.shields.io/badge/Python-3.8+-orange?style=flat-square)](https://python.org)
 [![Build Status](https://img.shields.io/github/actions/workflow/status/ai-nurmamat/AMP/ci.yml?style=flat-square)](.github/workflows/ci.yml)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](http://makeapullrequest.com)
+[![GitHub last commit](https://img.shields.io/github/last-commit/ai-nurmamat/AMP?style=flat-square)](https://github.com/ai-nurmamat/AMP/commits/main)
+[![GitHub repo size](https://img.shields.io/github/repo-size/ai-nurmamat/AMP?style=flat-square)](https://github.com/ai-nurmamat/AMP)
 [![Stars](https://img.shields.io/github/stars/ai-nurmamat/AMP?style=flat-square)](https://github.com/ai-nurmamat/AMP/stargazers)
 [![Forks](https://img.shields.io/github/forks/ai-nurmamat/AMP?style=flat-square)](https://github.com/ai-nurmamat/AMP/network)
 
