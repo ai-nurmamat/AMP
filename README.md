@@ -15,7 +15,7 @@
 
 AMP (Agent Memory Protocol) is a plug-and-play memory engine for the LLM era. It features **"Pluggable Memory"** with true **Cross-Agent Shared Inheritance** — memory written by one Agent can be instantly used by another. It completely breaks data silos, enabling seamless memory consensus across different AI tools.
 
-AMP (Agent Memory Protocol) — 主打**“插件化记忆、即插即用”**的大模型时代 AI Agent 记忆管理引擎。实现真正的**跨 Agent 共享与继承**——一个 Agent 存入的记忆，另一个 Agent 拔插即用，彻底打破信息孤岛，让不同 AI 工具之间形成记忆共识。
+AMP (Agent Memory Protocol) — 主打“插件化记忆、即插即用”的大模型时代 AI Agent 记忆管理引擎。实现真正的跨 Agent 共享与继承——一个 Agent 存入的记忆，另一个 Agent 拔插即用，彻底打破信息孤岛，让不同 AI 工具之间形成记忆共识。
 
 ---
 
