@@ -13,7 +13,7 @@ setup(
     version="0.4.0",
     author="OpenClaw Team",
     author_email="founders@openclaw.ai",
-    description="AMP (Agent Memory Protocol) - 业界首创的完全自主研发的AI Agent记忆引擎，跨生态、图向量双轨检索引擎。",
+    description="Agent Memory Protocol - 让每一个 AI Agent 都能快速和便捷的共享相同的记忆",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/openclaw/amp",
