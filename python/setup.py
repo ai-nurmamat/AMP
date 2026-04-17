@@ -10,7 +10,7 @@ long_description = open(readme_path, encoding="utf-8").read() if os.path.exists(
 
 setup(
     name="agent-memory-protocol",
-    version="1.0.0",
+    version="0.4.0",
     author="OpenClaw Team",
     author_email="founders@openclaw.ai",
     description="AMP (Agent Memory Protocol) - 业界首创的完全自主研发的AI Agent记忆引擎，跨生态、图向量双轨检索引擎。",
