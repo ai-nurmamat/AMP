@@ -1,4 +1,4 @@
-import { MemoryEvent, MemoryQuery, MemoryResult, MemoryRef } from './types';
+import { MemoryEvent, MemoryQuery, MemoryResult, MemoryRef } from './types.js';
 export interface IStorageProvider {
     store(event: MemoryEvent): Promise<MemoryRef>;
     retrieve(query: MemoryQuery): Promise<MemoryResult[]>;

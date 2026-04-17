@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll } from '@jest/globals';
-import { AMPCore, MemoryTier } from '../index';
+import { AMPCore, MemoryTier, MemoryEvent } from '../index.js';
 
 describe('AMPCore with MemoryStorageProvider', () => {
   let amp: AMPCore;

@@ -14,7 +14,7 @@ import {
   MemoryResult,
   MemoryRef,
   MemoryToolSchema,
-} from '../src/index';
+} from '../src/index.js';
 
 // ============================================================
 // Test Helper Types

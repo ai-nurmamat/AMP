@@ -6,8 +6,8 @@
  * 致力于成为 AI 记忆管理领域的最顶级形态。
  */
 
-import { IStorageProvider, FileStorageProvider, RedisStorageProvider } from './storage';
-import { MemoryEvent, MemoryQuery, MemoryResult, MemoryRef, MemoryToolSchema, MemoryTier, MemoryScope, MemoryMetadata } from './types';
+import { IStorageProvider, FileStorageProvider, RedisStorageProvider } from './storage.js';
+import { MemoryEvent, MemoryQuery, MemoryResult, MemoryRef, MemoryToolSchema, MemoryTier, MemoryScope, MemoryMetadata } from './types.js';
 
 export { MemoryTier, MemoryScope, MemoryMetadata, MemoryEvent, MemoryQuery, MemoryResult, MemoryRef, MemoryToolSchema };
 
