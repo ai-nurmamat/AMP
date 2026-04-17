@@ -48,15 +48,6 @@
   "contributors": [
     "Nurmamat <nurmamat@ozluk.ai>"
   ],
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/ai-nurmamat/AMP.git"
-  },
-  "homepage": "https://github.com/ai-nurmamat/AMP#readme",
-  "bugs": {
-    "url": "https://github.com/ai-nurmamat/AMP/issues",
-    "email": "nurmamat@ozluk.ai"
-  },
   "engines": {
     "node": ">=18.0.0"
   },
@@ -79,6 +70,7 @@
     "@types/express": "^5.0.6",
     "@types/jest": "^30.0.0",
     "@types/jsonwebtoken": "^9.0.10",
+    "@types/node": "^25.6.0",
     "@typescript-eslint/eslint-plugin": "^8.58.1",
     "@typescript-eslint/parser": "^8.58.1",
     "eslint": "^10.2.0",
