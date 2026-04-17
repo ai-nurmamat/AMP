@@ -2,7 +2,18 @@
 
 > **Memory is the essence of evolution.**
 
+[![npm version](https://img.shields.io/npm/v/agent-memory-protocol.svg?style=flat-square)](https://www.npmjs.com/package/agent-memory-protocol)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](LICENSE)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?style=flat-square)](https://www.typescriptlang.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-%3E=18-green?style=flat-square)](https://nodejs.org/)
+[![Python](https://img.shields.io/badge/Python-3.8+-orange?style=flat-square)](https://python.org)
+[![Build Status](https://img.shields.io/github/actions/workflow/status/ai-nurmamat/AMP/ci.yml?style=flat-square)](.github/workflows/ci.yml)
+[![Stars](https://img.shields.io/github/stars/ai-nurmamat/AMP?style=flat-square)](https://github.com/ai-nurmamat/AMP/stargazers)
+[![Forks](https://img.shields.io/github/forks/ai-nurmamat/AMP?style=flat-square)](https://github.com/ai-nurmamat/AMP/network)
+
 AMP (Agent Memory Protocol) breaks data silos by giving every AI Agent a persistent, global memory hub. It introduces a revolutionary **cross-ecosystem shared memory mechanism** and a **hybrid Graph-Vector retrieval architecture**. 
+
+[English](./README.md) · [中文](./python/README.md)
 
 ---
 
