@@ -1,4 +1,3 @@
-README.md
 setup.py
 agent_memory_protocol.egg-info/PKG-INFO
 agent_memory_protocol.egg-info/SOURCES.txt

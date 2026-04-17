@@ -8,7 +8,7 @@
       "importance": 0.5,
       "tags": [],
       "timestamp": 1776424327.8773744,
-      "last_accessed_at": 1776427053.355538,
+      "last_accessed_at": 1776427465.5555334,
       "extra": {}
     }
   },
@@ -21,7 +21,7 @@
       "importance": 0.5,
       "tags": [],
       "timestamp": 1776424327.8829067,
-      "last_accessed_at": 1776427053.367453,
+      "last_accessed_at": 1776427465.568931,
       "extra": {}
     }
   },
@@ -34,7 +34,7 @@
       "importance": 0.5,
       "tags": [],
       "timestamp": 1776427053.3551693,
-      "last_accessed_at": 1776427053.355538,
+      "last_accessed_at": 1776427465.5555334,
       "extra": {}
     }
   },
@@ -47,7 +47,59 @@
       "importance": 0.5,
       "tags": [],
       "timestamp": 1776427053.3671696,
-      "last_accessed_at": 1776427053.367453,
+      "last_accessed_at": 1776427465.568931,
+      "extra": {}
+    }
+  },
+  "58cf6362-1d62-4586-8bf5-95f23d073275": {
+    "id": "58cf6362-1d62-4586-8bf5-95f23d073275",
+    "content": "The user loves apples",
+    "score": 1.0,
+    "tier": "working",
+    "metadata": {
+      "importance": 0.5,
+      "tags": [],
+      "timestamp": 1776427258.3355885,
+      "last_accessed_at": 1776427465.5555334,
+      "extra": {}
+    }
+  },
+  "c82b8b2b-b1a0-497b-a7db-21fffc86984b": {
+    "id": "c82b8b2b-b1a0-497b-a7db-21fffc86984b",
+    "content": "Fallback test content",
+    "score": 1.0,
+    "tier": "long_term",
+    "metadata": {
+      "importance": 0.5,
+      "tags": [],
+      "timestamp": 1776427258.3495336,
+      "last_accessed_at": 1776427465.568931,
+      "extra": {}
+    }
+  },
+  "ec5f8728-16de-4251-8bec-d3111ea6f330": {
+    "id": "ec5f8728-16de-4251-8bec-d3111ea6f330",
+    "content": "The user loves apples",
+    "score": 1.0,
+    "tier": "working",
+    "metadata": {
+      "importance": 0.5,
+      "tags": [],
+      "timestamp": 1776427465.555055,
+      "last_accessed_at": 1776427465.5555334,
+      "extra": {}
+    }
+  },
+  "84480507-7610-4879-b151-ac4a43d9d52e": {
+    "id": "84480507-7610-4879-b151-ac4a43d9d52e",
+    "content": "Fallback test content",
+    "score": 1.0,
+    "tier": "long_term",
+    "metadata": {
+      "importance": 0.5,
+      "tags": [],
+      "timestamp": 1776427465.5685818,
+      "last_accessed_at": 1776427465.568931,
       "extra": {}
     }
   }
