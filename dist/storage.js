@@ -1,4 +1,5 @@
 import { createClient } from 'redis';
+import * as crypto from 'crypto';
 import * as fs from 'fs';
 import * as path from 'path';
 export class FileStorageProvider {

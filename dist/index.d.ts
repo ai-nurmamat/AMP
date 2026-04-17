@@ -5,8 +5,9 @@
  * 业界首创的多维记忆折叠架构，自主研发的跨生态、图向量双轨检索引擎。
  * 致力于成为 AI 记忆管理领域的最顶级形态。
  */
-import { MemoryEvent, MemoryQuery, MemoryResult, MemoryRef, MemoryToolSchema, MemoryTier, MemoryScope, MemoryMetadata } from './types.js';
-export { MemoryTier, MemoryScope, MemoryMetadata, MemoryEvent, MemoryQuery, MemoryResult, MemoryRef, MemoryToolSchema };
+import { MemoryTier, MemoryScope, MemoryMetadata, MemoryEvent, MemoryQuery, MemoryResult, MemoryRef, MemoryToolSchema } from './types.js';
+export { MemoryTier };
+export type { MemoryScope, MemoryMetadata, MemoryEvent, MemoryQuery, MemoryResult, MemoryRef, MemoryToolSchema };
 export interface AMPConfig {
     redisUrl?: string;
 }

@@ -114,7 +114,7 @@ class FileStorageProvider(StorageProvider):
                 with open(self.file_path, 'r', encoding='utf-8') as f:
                     data = json.load(f)
                     for k, v in data.items():
-                        self._store[k] = MemoryResult(**v)
+                        self._store[k] = MemoryResult.model_validate(v)
             except Exception as e:
                 logger.warning(f"[AMP] Failed to load memory from file: {e}")
 

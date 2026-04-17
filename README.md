@@ -11,9 +11,9 @@
 [![Stars](https://img.shields.io/github/stars/ai-nurmamat/AMP?style=flat-square)](https://github.com/ai-nurmamat/AMP/stargazers)
 [![Forks](https://img.shields.io/github/forks/ai-nurmamat/AMP?style=flat-square)](https://github.com/ai-nurmamat/AMP/network)
 
-AMP (Agent Memory Protocol) breaks data silos by giving every AI Agent a persistent, global memory hub. It introduces a revolutionary **cross-ecosystem shared memory mechanism** and a **hybrid Graph-Vector retrieval architecture**.
+AMP (Agent Memory Protocol) is a plug-and-play memory engine for the LLM era. It features **"Pluggable Memory"** with true **Cross-Agent Shared Inheritance** — memory written by one Agent can be instantly used by another. It completely breaks data silos, enabling seamless memory consensus across different AI tools.
 
-*AMP (Agent Memory Protocol) — 完全自主研发的大模型时代 AI Agent 记忆管理引擎。首创**跨生态共享机制**与**图向量双轨检索架构**，打破信息孤岛，让每一个 AI Agent 都能拥有跨越会话、跨越设备、跨越平台的永恒记忆。*
+*AMP (Agent Memory Protocol) — 主打**“插件化记忆、即插即用”**的大模型时代 AI Agent 记忆管理引擎。实现真正的**跨 Agent 共享与继承**——一个 Agent 存入的记忆，另一个 Agent 拔插即用，彻底打破信息孤岛，让不同 AI 工具之间形成记忆共识。*
 
 ---
 

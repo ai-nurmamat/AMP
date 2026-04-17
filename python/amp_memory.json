@@ -8,7 +8,7 @@
       "importance": 0.5,
       "tags": [],
       "timestamp": 1776424327.8773744,
-      "last_accessed_at": 1776424327.877754,
+      "last_accessed_at": 1776427053.355538,
       "extra": {}
     }
   },
@@ -21,7 +21,33 @@
       "importance": 0.5,
       "tags": [],
       "timestamp": 1776424327.8829067,
-      "last_accessed_at": 1776424327.8831491,
+      "last_accessed_at": 1776427053.367453,
+      "extra": {}
+    }
+  },
+  "42482d30-cb64-4251-91f9-fdce143bc4e2": {
+    "id": "42482d30-cb64-4251-91f9-fdce143bc4e2",
+    "content": "The user loves apples",
+    "score": 1.0,
+    "tier": "working",
+    "metadata": {
+      "importance": 0.5,
+      "tags": [],
+      "timestamp": 1776427053.3551693,
+      "last_accessed_at": 1776427053.355538,
+      "extra": {}
+    }
+  },
+  "91ad69fb-1efd-45d1-a72b-1b38f7d2f0be": {
+    "id": "91ad69fb-1efd-45d1-a72b-1b38f7d2f0be",
+    "content": "Fallback test content",
+    "score": 1.0,
+    "tier": "long_term",
+    "metadata": {
+      "importance": 0.5,
+      "tags": [],
+      "timestamp": 1776427053.3671696,
+      "last_accessed_at": 1776427053.367453,
       "extra": {}
     }
   }
