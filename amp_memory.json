@@ -8,7 +8,22 @@
       "importance": 0.5,
       "tags": [],
       "timestamp": 1776424358444,
-      "lastAccessedAt": 1776424358444
+      "last_accessed_at": null,
+      "extra": {}
+    }
+  },
+  "984f4d3d-f3b4-4967-a479-6a9207f57802": {
+    "id": "984f4d3d-f3b4-4967-a479-6a9207f57802",
+    "content": "用户在晚上喜欢听爵士乐，并且擅长使用 Python 开发跨 Agent 系统。",
+    "score": 1,
+    "tier": "long_term",
+    "metadata": {
+      "importance": 0.5,
+      "tags": [],
+      "timestamp": 1776424737.490431,
+      "last_accessed_at": 1776424738.4925737,
+      "extra": {},
+      "lastAccessedAt": 1776424764922
     }
   }
 }
