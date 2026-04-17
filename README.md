@@ -98,9 +98,27 @@
 
 ---
 
-## 📦 安装
+## 📦 安装与快速体验
 
-### TypeScript / Node.js
+### 一行命令跑通本地体验 (Quick Start Demo)
+
+无需任何配置，克隆后直接跑通**记忆写入+智能检索**的全流程！系统将自动为你创建持久化文件 `amp_memory.json`。
+
+```bash
+git clone https://github.com/ai-nurmamat/AMP.git
+cd AMP
+npm install
+npm run build
+npm run demo
+```
+
+在 Demo 终端中：
+1. **直接打字输入**即可永久保存你的偏好（如：“我平时写代码最喜欢用深色主题”）。
+2. 输入 `? 偏好` 即可体验跨 Agent 维度的语义检索引擎。
+
+---
+
+### 在你的项目中使用 (Node.js / TypeScript)
 
 ```bash
 # 方式一：从 GitHub 直接安装（推荐）
