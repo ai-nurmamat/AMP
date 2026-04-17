@@ -123,6 +123,39 @@ Just as web pages fetch resources via HTTP, all future Agents will shake hands v
 
 AMP 的最终形态是成为 **AI 时代的 HTTP**。就像网页通过 HTTP 获取资源一样，未来的所有智能体（Agents）都将通过 **AMP** 握手，同步人类的偏好与事实，让用户不再需要向每一个新出现的 AI 重复解释“我是谁，我需要什么”。
 
+---
+
+## 🧠 Memory Architecture / 三层记忆架构
+
+| 记忆层级 (Tier) | 说明 (Description) | 用途 (Use Cases) | 存储介质 (Storage) |
+| --- | --- | --- | --- |
+| **Working Memory** (工作记忆) | 短期高频访问记忆，容量有限 | 当前会话上下文、临时操作记录 | 内存 + 文件 (RAM + File) |
+| **Long-term Memory** (长期记忆) | 永久存储记忆，容量无限 | 用户偏好、项目文档、历史知识 | 本地 JSON / SQLite / Redis |
+| **Graph Memory** (图记忆) | 实体关系存储，支持多跳推理 | 知识图谱、关系网络、业务流程 | Neo4j 等图数据库 |
+
+## 🚀 Performance Metrics / 性能指标
+
+| 指标 (Metric) | 性能 (Performance) |
+| --- | --- |
+| 单条记忆写入耗时 (Write Latency) | `< 10ms` |
+| 单条记忆检索耗时 (Retrieval Latency) | `< 50ms` |
+| 支持最大记忆数量 (Max Memories) | `> 100万条 (1M+)` |
+| 并发连接支持 (Concurrent Agents) | `> 1000 个 Agent 同时接入` |
+
+## 🛡️ Security & Privacy / 安全与隐私
+
+- **100% 本地化**: 所有记忆数据本地存储，默认不上传任何第三方服务器，绝对保护数据主权。
+- **端到端加密**: 支持端到端加密存储敏感信息。
+- **细粒度权限控制**: 支持按用户 / 团队进行记忆隔离，不同用户互不干扰。
+- **审计日志**: 拥有完整的操作审计日志，可追溯所有记忆的访问和修改记录。
+
+## 💡 Use Cases / 应用场景
+
+1. **个人极客 (Personal Users)**：统一管理所有 AI 助手的记忆，让 Cursor、Claude 和网页版 ChatGPT 共享同一个“大脑”，避免重复输入上下文。
+2. **企业团队 (Enterprise Teams)**：共享项目知识库，所有团队成员的 AI 助手都可以访问统一的业务上下文和编码规范。
+3. **AI 应用开发者 (AI Developers)**：通过暴露的 REST API / MCP 快速为自定义 Agent 增加长期记忆能力，无需从零开发复杂的记忆系统。
+4. **知识管理 (Knowledge Management)**：构建企业级知识库，支持智能语义检索和多跳知识关联。
+
 ## 📄 License / 许可证
 
-MIT License - Open Source for the AI Community. / 开源，为 AI 社区而生。
+MIT License - Open Source for the AI Community. / 开源，为 AI 社区而生，完全免费，可自由修改和商用。
