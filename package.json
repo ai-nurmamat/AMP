@@ -6,6 +6,7 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "module": "dist/index.js",
+  "type": "module",
   "bin": {
     "amp-server": "./mcp/index.ts"
   },
@@ -18,7 +19,7 @@
   },
   "scripts": {
     "start": "node --experimental-modules mcp/index.ts",
-    "demo": "node --experimental-modules demo.js",
+    "demo": "node demo.js",
     "build": "tsc",
     "test": "jest",
     "test:watch": "jest --watch",
