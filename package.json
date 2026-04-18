@@ -1,8 +1,8 @@
 {
   "name": "agent-memory-protocol",
   "version": "0.4.0",
-  "description": "Agent Memory Protocol - 让每一个 AI Agent 都能快速和便捷的共享相同的记忆",
-  "description_en": "Agent Memory Protocol - Enable every AI Agent to share the same memory quickly and conveniently",
+  "description": "跨智能体记忆协议",
+  "description_en": "Cross-Agent Memory Protocol",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "module": "dist/index.js",

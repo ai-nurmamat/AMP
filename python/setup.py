@@ -13,7 +13,7 @@ setup(
     version="0.4.0",
     author="OpenClaw Team",
     author_email="founders@openclaw.ai",
-    description="Agent Memory Protocol - 让每一个 AI Agent 都能快速和便捷的共享相同的记忆",
+    description="跨智能体记忆协议",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/openclaw/amp",
