@@ -14,11 +14,13 @@ export enum MemoryTier {
 
 // 3. 记忆元数据 (Memory Metadata)
 export interface MemoryMetadata {
-  importance: number;      // 重要性得分 (范围 0.0 - 1.0)，为后台艾宾浩斯遗忘曲线及上下文修剪提供决策依据
-  tags: string[];          // 分类标签，用于精确的元数据过滤与检索
-  timestamp: number;       // 记忆创建时间戳
-  lastAccessedAt?: number; // 最后一次检索命中时间，驱动数据淘汰与降维机制
-  [key: string]: any;      // 支持扩展的动态字段
+  importance: number;            // 重要性得分 (范围 0.0 - 1.0)，为后台艾宾浩斯遗忘曲线及上下文修剪提供决策依据
+  tags: string[];                // 分类标签，用于精确的元数据过滤与检索
+  timestamp: number;             // 记忆创建时间戳
+  lastAccessedAt?: number;       // 最后一次检索命中时间，驱动数据淘汰与降维机制
+  accessCount?: number;          // 累计被检索命中的次数，作为艾宾浩斯遗忘曲线中的访问增益因子
+  updated_at?: number;           // 最近一次被 update() 修改的时间戳（显式类型化，避免依赖动态字段）
+  [key: string]: unknown;        // 受限的向前兼容扩展槽位（仅 unknown，避免 any 污染类型系统）
 }
 
 // 4. 标准记忆实体
@@ -51,8 +53,9 @@ export interface MemoryQuery {
 export interface MemoryResult {
   id: string;
   content: string;
-  score: number;      // 相似度得分 (向量检索时)
+  score: number;      // 相似度得分 (向量检索时，仅运行时，不持久化)
   tier: MemoryTier;
+  scope?: MemoryScope; // 持久化的作用域，用于 retrieve 阶段做隔离过滤
   metadata: MemoryMetadata;
 }
 

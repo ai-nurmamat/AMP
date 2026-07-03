@@ -1,5 +1,37 @@
+# Dependencies
 node_modules/
 __pycache__/
 *.pyc
+
+# Build artifacts
+dist/
+build/
+*.egg-info/
+.eggs/
+python/dist/
+python/build/
+
+# Runtime / generated data (DO NOT commit)
+amp_memory.json
+*.amp_memory.json
+python/amp_memory.json
+
+# Test / coverage artifacts
+.pytest_cache/
+.coverage
+coverage/
+.coverage.*
+htmlcov/
+.nyc_output/
+
+# Editor / OS files
 .DS_Store
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Environment
 .env
+.env.local
+.env.*.local

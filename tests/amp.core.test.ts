@@ -3,7 +3,7 @@
  * Tests for AMPCore, MemoryStorageProvider, and all public APIs
  */
 
-import { describe, it, expect, beforeEach } from '@jest/globals';
+import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import {
   AMPCore,
   MemoryTier
@@ -32,21 +32,34 @@ function createTestMemory(overrides: Partial<MemoryEvent> = {}): MemoryEvent {
 }
 
 // ============================================================
-// AMPCore Basic Functionality
+// Test Fix 1: 临时文件工具
+// 用唯一的临时文件替代共享的 cwd/amp_memory.json，避免并行测试 / 重复运行互相污染。
 // ============================================================
 import * as fs from 'fs';
+import * as os from 'os';
 import * as path from 'path';
 
-const memoryFile = path.join(process.cwd(), 'amp_memory.json');
+function makeTmpFile(prefix: string = 'core'): string {
+  return path.join(
+    os.tmpdir(),
+    `amp_core_${prefix}_${Date.now()}_${Math.random().toString(36).slice(2)}.json`
+  );
+}
 
+// ============================================================
+// AMPCore Basic Functionality
+// ============================================================
 describe('AMPCore', () => {
   let amp: AMPCore;
+  let tmpFile: string;
 
   beforeEach(() => {
-    if (fs.existsSync(memoryFile)) {
-      fs.unlinkSync(memoryFile);
-    }
-    amp = new AMPCore();
+    tmpFile = makeTmpFile('basic');
+    amp = new AMPCore({ storagePath: tmpFile });
+  });
+
+  afterEach(() => {
+    try { if (tmpFile && fs.existsSync(tmpFile)) fs.unlinkSync(tmpFile); } catch { /* ignore */ }
   });
 
   // ---- Store ----
@@ -99,6 +112,14 @@ describe('AMPCore', () => {
       expect(ref1.id).not.toBe(ref2.id);
       expect(ref2.id).not.toBe(ref3.id);
       expect(ref3.id).not.toBe(ref1.id);
+    });
+
+    // Fix 5: 显式 id 冲突应抛错而非静默覆盖。
+    it('should throw on duplicate explicit id', async () => {
+      const mem = createTestMemory({ id: 'fixed-id-123', content: 'first' });
+      await amp.store(mem);
+      await expect(amp.store(createTestMemory({ id: 'fixed-id-123', content: 'second' })))
+        .rejects.toThrow(/already exists/);
     });
   });
 
@@ -159,6 +180,17 @@ describe('AMPCore', () => {
       expect(results[0].metadata.importance).toBeGreaterThanOrEqual(0.7);
     });
 
+    // Fix 3: minImportance: 0 是合法边界值，不应被当作 falsy 跳过过滤。
+    it('should treat minImportance: 0 as a valid boundary filter', async () => {
+      await amp.store(createTestMemory({ content: 'zero importance', metadata: { importance: 0 } }));
+      await amp.store(createTestMemory({ content: 'high importance', metadata: { importance: 0.9 } }));
+
+      // minImportance: 0 应当过滤掉所有 importance < 0 的（即不过滤任何东西，因为最小就是 0），
+      // 关键是不应被 `if (query.minImportance && ...)` 的 falsy 判断误判为“未设置”。
+      const results = await amp.retrieve({ query: 'importance', minImportance: 0 });
+      expect(results.length).toBe(2);
+    });
+
     it('should limit results with limit parameter', async () => {
       for (let i = 0; i < 20; i++) {
         await amp.store(createTestMemory({ content: `Memory number ${i}` }));
@@ -182,6 +214,28 @@ describe('AMPCore', () => {
 
       const results = await amp.retrieve({ query: 'test' });
       expect(results[0].metadata.lastAccessedAt).toBeGreaterThanOrEqual(before);
+    });
+
+    // Fix 2: 返回结果应是深拷贝，调用方修改不应污染存储层。
+    it('should return deep-copied metadata that does not pollute storage', async () => {
+      const ref = await amp.store(createTestMemory({ content: 'pollution guard' }));
+      const results = await amp.retrieve({ query: 'pollution' });
+      expect(results.length).toBeGreaterThan(0);
+      // 调用方篡改返回结果的 metadata。
+      results[0].metadata.importance = 999;
+      results[0].content = 'tampered';
+      // 再次检索，存储层应未受影响。
+      const results2 = await amp.retrieve({ query: 'pollution' });
+      expect(results2[0].metadata.importance).not.toBe(999);
+      expect(results2[0].content).toBe('pollution guard');
+    });
+
+    // Feature A: accessCount 应在每次命中检索时递增。
+    it('should increment accessCount on retrieve hits', async () => {
+      await amp.store(createTestMemory({ content: 'access counter memory' }));
+      await amp.retrieve({ query: 'access counter' });
+      const results = await amp.retrieve({ query: 'access counter' });
+      expect(results[0].metadata.accessCount).toBeGreaterThanOrEqual(2);
     });
   });
 
@@ -320,41 +374,59 @@ describe('AMPCore', () => {
 
 // ============================================================
 // Memory Scope Isolation
+// Test Fix 2: 之前的断言 `results.length >= 2` 实际验证的是“非隔离”。
+// Fix 4 实现真正的 scope 过滤后，这些用例改为断言“仅返回匹配 scope 的记忆”。
 // ============================================================
 describe('Memory Scope Isolation', () => {
   let amp: AMPCore;
+  let tmpFile: string;
 
   beforeEach(() => {
-    if (fs.existsSync(memoryFile)) {
-      fs.unlinkSync(memoryFile);
-    }
-    amp = new AMPCore();
+    tmpFile = makeTmpFile('scope');
+    amp = new AMPCore({ storagePath: tmpFile });
+  });
+
+  afterEach(() => {
+    try { if (tmpFile && fs.existsSync(tmpFile)) fs.unlinkSync(tmpFile); } catch { /* ignore */ }
   });
 
   it('should isolate memories by userId', async () => {
-    await amp.store(createTestMemory({ scope: { userId: 'user-A' }, content: 'User A memory' }));
-    await amp.store(createTestMemory({ scope: { userId: 'user-B' }, content: 'User B memory' }));
+    await amp.store({ tier: MemoryTier.WORKING, scope: { userId: 'alice' }, content: 'alice memory' });
+    await amp.store({ tier: MemoryTier.WORKING, scope: { userId: 'bob' }, content: 'bob memory' });
 
-    const results = await amp.retrieve({ query: 'memory' });
-    // MemoryStorageProvider doesn't filter by scope — it returns all matches
-    // Higher-level filtering by scope is the responsibility of the caller
-    expect(results.length).toBeGreaterThanOrEqual(2);
+    const aliceResults = await amp.retrieve({ query: 'memory', scope: { userId: 'alice' } });
+    expect(aliceResults.length).toBe(1);
+    expect(aliceResults[0].content).toBe('alice memory');
+
+    const bobResults = await amp.retrieve({ query: 'memory', scope: { userId: 'bob' } });
+    expect(bobResults.length).toBe(1);
+    expect(bobResults[0].content).toBe('bob memory');
   });
 
   it('should isolate memories by sessionId', async () => {
-    await amp.store(createTestMemory({ scope: { sessionId: 'session-1' } }));
-    await amp.store(createTestMemory({ scope: { sessionId: 'session-2' } }));
+    await amp.store({ tier: MemoryTier.WORKING, scope: { sessionId: 'session-1' }, content: 'session one memory' });
+    await amp.store({ tier: MemoryTier.WORKING, scope: { sessionId: 'session-2' }, content: 'session two memory' });
 
-    const size = await amp.getSize();
-    expect(size).toBeGreaterThanOrEqual(2);
+    const s1Results = await amp.retrieve({ query: 'session', scope: { sessionId: 'session-1' } });
+    expect(s1Results.length).toBe(1);
+    expect(s1Results[0].content).toBe('session one memory');
+
+    const s2Results = await amp.retrieve({ query: 'session', scope: { sessionId: 'session-2' } });
+    expect(s2Results.length).toBe(1);
+    expect(s2Results[0].content).toBe('session two memory');
   });
 
-  it('should support agentId scope', async () => {
-    await amp.store(createTestMemory({ scope: { agentId: 'agent-alpha' } }));
-    await amp.store(createTestMemory({ scope: { agentId: 'agent-beta' } }));
+  it('should isolate memories by agentId', async () => {
+    await amp.store({ tier: MemoryTier.WORKING, scope: { agentId: 'agent-alpha' }, content: 'alpha agent memory' });
+    await amp.store({ tier: MemoryTier.WORKING, scope: { agentId: 'agent-beta' }, content: 'beta agent memory' });
 
-    const size = await amp.getSize();
-    expect(size).toBeGreaterThanOrEqual(2);
+    const alphaResults = await amp.retrieve({ query: 'agent', scope: { agentId: 'agent-alpha' } });
+    expect(alphaResults.length).toBe(1);
+    expect(alphaResults[0].content).toBe('alpha agent memory');
+
+    const betaResults = await amp.retrieve({ query: 'agent', scope: { agentId: 'agent-beta' } });
+    expect(betaResults.length).toBe(1);
+    expect(betaResults[0].content).toBe('beta agent memory');
   });
 
   it('should support compound scopes', async () => {
@@ -365,8 +437,24 @@ describe('Memory Scope Isolation', () => {
       })
     );
 
+    // 不指定 scope 时应能检索到（不应用隔离过滤）。
     const results = await amp.retrieve({ query: 'Compound scope' });
     expect(results.length).toBeGreaterThan(0);
+
+    // 指定完全匹配的复合 scope 时也应能检索到。
+    const scopedResults = await amp.retrieve({
+      query: 'Compound scope',
+      scope: { userId: 'u1', sessionId: 's1', agentId: 'a1' },
+    });
+    expect(scopedResults.length).toBe(1);
+    expect(scopedResults[0].content).toBe('Compound scope memory');
+
+    // 任一维度不匹配时，应被过滤掉。
+    const mismatchResults = await amp.retrieve({
+      query: 'Compound scope',
+      scope: { userId: 'someone-else' },
+    });
+    expect(mismatchResults.length).toBe(0);
   });
 });
 
@@ -375,12 +463,15 @@ describe('Memory Scope Isolation', () => {
 // ============================================================
 describe('Memory Tier Behavior', () => {
   let amp: AMPCore;
+  let tmpFile: string;
 
   beforeEach(() => {
-    if (fs.existsSync(memoryFile)) {
-      fs.unlinkSync(memoryFile);
-    }
-    amp = new AMPCore();
+    tmpFile = makeTmpFile('tier');
+    amp = new AMPCore({ storagePath: tmpFile });
+  });
+
+  afterEach(() => {
+    try { if (tmpFile && fs.existsSync(tmpFile)) fs.unlinkSync(tmpFile); } catch { /* ignore */ }
   });
 
   it('should store and retrieve WORKING tier', async () => {
@@ -407,12 +498,15 @@ describe('Memory Tier Behavior', () => {
 // ============================================================
 describe('Edge Cases', () => {
   let amp: AMPCore;
+  let tmpFile: string;
 
   beforeEach(() => {
-    if (fs.existsSync(memoryFile)) {
-      fs.unlinkSync(memoryFile);
-    }
-    amp = new AMPCore();
+    tmpFile = makeTmpFile('edge');
+    amp = new AMPCore({ storagePath: tmpFile });
+  });
+
+  afterEach(() => {
+    try { if (tmpFile && fs.existsSync(tmpFile)) fs.unlinkSync(tmpFile); } catch { /* ignore */ }
   });
 
   it('should handle empty content gracefully', async () => {
@@ -460,14 +554,22 @@ describe('Edge Cases', () => {
 // Concurrent Operations
 // ============================================================
 describe('Concurrent Operations', () => {
+  let tmpFiles: string[] = [];
+
   beforeEach(() => {
-    if (fs.existsSync(memoryFile)) {
-      fs.unlinkSync(memoryFile);
+    tmpFiles = [];
+  });
+
+  afterEach(() => {
+    for (const f of tmpFiles) {
+      try { if (fs.existsSync(f)) fs.unlinkSync(f); } catch { /* ignore */ }
     }
   });
 
   it('should handle concurrent store operations', async () => {
-    const amp = new AMPCore();
+    const file = makeTmpFile('concstore');
+    tmpFiles.push(file);
+    const amp = new AMPCore({ storagePath: file });
     const promises = Array.from({ length: 50 }, (_, i) =>
       amp.store(createTestMemory({ content: `Concurrent memory ${i}` }))
     );
@@ -478,7 +580,9 @@ describe('Concurrent Operations', () => {
   });
 
   it('should handle concurrent retrieve operations', async () => {
-    const amp = new AMPCore();
+    const file = makeTmpFile('concretv');
+    tmpFiles.push(file);
+    const amp = new AMPCore({ storagePath: file });
     await amp.store(createTestMemory({ content: 'Shared content' }));
 
     const promises = Array.from({ length: 20 }, () => amp.retrieve({ query: 'Shared' }));
@@ -487,5 +591,43 @@ describe('Concurrent Operations', () => {
     for (const result of results) {
       expect(result.length).toBeGreaterThan(0);
     }
+  });
+});
+
+// ============================================================
+// Feature D: Encryption (at-rest, AES-256-GCM)
+// ============================================================
+describe('FileStorageProvider encryption', () => {
+  let tmpFile: string;
+
+  beforeEach(() => {
+    tmpFile = makeTmpFile('enc');
+  });
+
+  afterEach(() => {
+    try { if (tmpFile && fs.existsSync(tmpFile)) fs.unlinkSync(tmpFile); } catch { /* ignore */ }
+  });
+
+  it('should encrypt the file at rest and still round-trip data', async () => {
+    // 32-byte key in hex (64 chars).
+    const key = '0'.repeat(64);
+    const amp = new AMPCore({ storagePath: tmpFile, encryptionKey: key });
+    await amp.store({ tier: MemoryTier.LONG_TERM, scope: { userId: 'enc' }, content: 'secret memory' });
+
+    // 文件落盘后不应是明文 JSON。
+    const raw = fs.readFileSync(tmpFile, 'utf-8');
+    expect(raw).not.toContain('secret memory');
+    expect(raw.split(':').length).toBe(3); // iv:authTag:ciphertext
+
+    // 用相同密钥重新构造 AMPCore，应能解密并检索。
+    const amp2 = new AMPCore({ storagePath: tmpFile, encryptionKey: key });
+    const results = await amp2.retrieve({ query: 'secret' });
+    expect(results.length).toBeGreaterThan(0);
+    expect(results[0].content).toBe('secret memory');
+  });
+
+  it('should reject an invalid encryption key length', () => {
+    expect(() => new AMPCore({ storagePath: tmpFile, encryptionKey: 'too-short' }))
+      .toThrow(/32 bytes/);
   });
 });

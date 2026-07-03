@@ -1,0 +1,10 @@
+node_modules
+dist
+python
+extension
+.git
+.github
+*.md
+!README.md
+.env
+amp_memory.json

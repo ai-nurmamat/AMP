@@ -131,30 +131,53 @@ AMP 的最终形态是成为 **AI 时代的 HTTP**。就像网页通过 HTTP 获
 | --- | --- | --- | --- |
 | **Working Memory** (工作记忆) | 短期高频访问记忆，容量有限 | 当前会话上下文、临时操作记录 | 内存 + 文件 (RAM + File) |
 | **Long-term Memory** (长期记忆) | 永久存储记忆，容量无限 | 用户偏好、项目文档、历史知识 | 本地 JSON / SQLite / Redis |
-| **Graph Memory** (图记忆) | 实体关系存储，支持多跳推理 | 知识图谱、关系网络、业务流程 | Neo4j 等图数据库 |
+| **Graph Memory** (图记忆) | 实体关系存储（规划中） | 知识图谱、关系网络、业务流程（待 Neo4j 集成，见 Roadmap） | 当前作为枚举占位，与 Long-term 共用存储 |
 
 ## 🚀 Performance Metrics / 性能指标
 
-| 指标 (Metric) | 性能 (Performance) |
+实际性能高度依赖所选后端与数据规模。下表为参考量级（小规模数据 + 默认 FileStorageProvider，单进程基准）：
+
+| 指标 (Metric) | 参考性能 (Reference) |
 | --- | --- |
-| 单条记忆写入耗时 (Write Latency) | `< 10ms` |
-| 单条记忆检索耗时 (Retrieval Latency) | `< 50ms` |
-| 支持最大记忆数量 (Max Memories) | `> 100万条 (1M+)` |
-| 并发连接支持 (Concurrent Agents) | `> 1000 个 Agent 同时接入` |
+| 单条记忆写入耗时 (Write Latency, File provider) | `< 10ms`（小数据量） |
+| 单条记忆检索耗时 (Retrieval Latency, File provider) | `< 50ms`（小数据量） |
+| 单条记忆检索耗时 (Retrieval Latency, SQLite / Redis provider) | `< 10ms`（带索引，万级数据） |
+| 推荐最大记忆数量 (Recommended Max Memories) | File ~1万；SQLite ~百万；Redis ~百万+ |
+| 并发连接支持 (Concurrent Agents via MCP/REST) | 受 Node 单进程限制，约 100–1000 |
+
+> ⚠️ FileStorageProvider 在每次 retrieve 时会回写 `lastAccessedAt`，大数据量下应优先选择 SQLite 或 Redis 后端以获得真正的索引/事务能力。
 
 ## 🛡️ Security & Privacy / 安全与隐私
 
-- **100% 本地化**: 所有记忆数据本地存储，默认不上传任何第三方服务器，绝对保护数据主权。
-- **端到端加密**: 支持端到端加密存储敏感信息。
-- **细粒度权限控制**: 支持按用户 / 团队进行记忆隔离，不同用户互不干扰。
-- **审计日志**: 拥有完整的操作审计日志，可追溯所有记忆的访问和修改记录。
+- **100% 本地化**: 所有记忆数据默认本地存储，不上传任何第三方服务器。
+- **At-rest 加密**: `FileStorageProvider` 支持可选的 AES-256-GCM 静态文件加密（通过 `encryptionKey` 配置）。注意这是文件级静态加密，传输层加密请通过 HTTPS/TLS 在上层处理。
+- **细粒度权限控制**: 通过 `MemoryScope`（userId / sessionId / agentId）实现记忆隔离，retrieve 阶段强制过滤，不同 scope 互不可见。
+- **审计日志**: 配置 `auditLogPath` 后，所有 store / retrieve / update / delete 操作都会按行追加 JSON 审计条目，可追溯。
+- **MCP/REST 认证**: 生产环境（`NODE_ENV=production`）启动时强制要求 `AMP_API_TOKEN` 环境变量；token 比较使用 `crypto.timingSafeEqual` 防时序侧信道；CORS 默认仅允许 localhost 与 chrome-extension 来源。
 
 ## 💡 Use Cases / 应用场景
 
 1. **个人极客 (Personal Users)**：统一管理所有 AI 助手的记忆，让 Cursor、Claude 和网页版 ChatGPT 共享同一个“大脑”，避免重复输入上下文。
-2. **企业团队 (Enterprise Teams)**：共享项目知识库，所有团队成员的 AI 助手都可以访问统一的业务上下文和编码规范。
+2. **企业团队 (Enterprise Teams)**：共享项目知识库，所有团队成员的 AI 助手都可以访问统一的业务上下文和编码规范（通过 scope 隔离按团队切分）。
 3. **AI 应用开发者 (AI Developers)**：通过暴露的 REST API / MCP 快速为自定义 Agent 增加长期记忆能力，无需从零开发复杂的记忆系统。
-4. **知识管理 (Knowledge Management)**：构建企业级知识库，支持智能语义检索和多跳知识关联。
+4. **知识管理 (Knowledge Management)**：构建企业级知识库，支持按用户/会话维度的语义检索（基于子串+分词匹配，真正的向量检索见 Roadmap）。
+
+## 🗺️ Roadmap / 路线图
+
+当前版本已实现的功能 vs. 规划中（避免宣传与实现脱节）：
+
+| 能力 | 当前状态 |
+| --- | --- |
+| File / SQLite / Redis 三种存储后端 | ✅ 已实现 |
+| `MemoryScope` 作用域隔离 | ✅ 已实现 |
+| 艾宾浩斯遗忘曲线 / 动态权重（半衰期 + 访问增益） | ✅ 已实现 |
+| AES-256-GCM 静态文件加密 | ✅ 已实现 |
+| 审计日志 | ✅ 已实现 |
+| MCP + REST API 双协议 | ✅ 已实现 |
+| Chrome 浏览器插件（高亮 / 阅读偏好 / 频繁搜索捕获） | ✅ 已实现 |
+| **真正的向量检索**（embedding + cosine similarity） | 🔜 规划中（当前为子串 + 分词匹配，无 embedding） |
+| **Neo4j 图记忆层 / 多跳推理** | 🔜 规划中（`MemoryTier.GRAPH` 当前仅作枚举占位） |
+| **分布式 / 多进程并发安全** | 🔜 规划中（File 路径单进程；SQLite/Redis 路径具备基础并发能力） |
 
 ## 📄 License / 许可证
 
