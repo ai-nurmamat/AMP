@@ -6,6 +6,7 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?style=flat-square)](https://www.typescriptlang.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-%3E=18-green?style=flat-square)](https://nodejs.org/)
 [![Python](https://img.shields.io/badge/Python-3.8+-orange?style=flat-square)](https://python.org)
+[![AMP Version](https://img.shields.io/badge/AMP-1.0.0-brightgreen?style=flat-square)](python/setup.py)
 [![Build Status](https://img.shields.io/github/actions/workflow/status/ai-nurmamat/AMP/ci.yml?style=flat-square)](.github/workflows/ci.yml)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](http://makeapullrequest.com)
 [![GitHub last commit](https://img.shields.io/github/last-commit/ai-nurmamat/AMP?style=flat-square)](https://github.com/ai-nurmamat/AMP/commits/main)
