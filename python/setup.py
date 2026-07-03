@@ -10,7 +10,7 @@ long_description = open(readme_path, encoding="utf-8").read() if os.path.exists(
 
 setup(
     name="agent-memory-protocol",
-    version="0.4.0",
+    version="1.0.0",
     author="ai-nurmamat",
     author_email="nurmamat@ozluk.ai",
     description="跨智能体记忆协议",
