@@ -10,13 +10,13 @@ long_description = open(readme_path, encoding="utf-8").read() if os.path.exists(
 
 setup(
     name="agent-memory-protocol",
-    version="0.4.0",
-    author="OpenClaw Team",
-    author_email="founders@openclaw.ai",
+    version="1.0.0",
+    author="ai-nurmamat",
+    author_email="nurmamat@ozluk.ai",
     description="跨智能体记忆协议",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/openclaw/amp",
+    url="https://github.com/ai-nurmamat/AMP",
     packages=find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",
@@ -28,4 +28,9 @@ setup(
     install_requires=[
         "pydantic>=2.0.0",
     ],
+    extras_require={
+        "crypto": ["cryptography>=41.0"],
+        "redis": ["redis>=4.2"],
+        "dev": ["pytest>=7.0", "pytest-asyncio>=0.21", "black", "flake8"],
+    },
 )

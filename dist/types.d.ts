@@ -13,7 +13,9 @@ export interface MemoryMetadata {
     tags: string[];
     timestamp: number;
     lastAccessedAt?: number;
-    [key: string]: any;
+    accessCount?: number;
+    updated_at?: number;
+    [key: string]: unknown;
 }
 export interface MemoryEvent {
     id?: string;
@@ -41,6 +43,7 @@ export interface MemoryResult {
     content: string;
     score: number;
     tier: MemoryTier;
+    scope?: MemoryScope;
     metadata: MemoryMetadata;
 }
 export interface MemoryToolSchema {

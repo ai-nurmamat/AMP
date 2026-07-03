@@ -20,13 +20,15 @@ jobs:
           --health-timeout 5s
           --health-retries 5
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Use Node.js 18.x
-      uses: actions/setup-node@v3
+      uses: actions/setup-node@v4
       with:
         node-version: '18.x'
         cache: 'npm'
     - run: npm ci
+    - name: Lint TypeScript
+      run: npm run lint
     - run: npm run build
     - name: Run TS Tests
       run: npm run test
@@ -35,6 +37,9 @@ jobs:
 
   python-build:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
     services:
       redis:
         image: redis/redis-stack-server:latest
@@ -46,21 +51,29 @@ jobs:
           --health-timeout 5s
           --health-retries 5
     steps:
-    - uses: actions/checkout@v3
-    - name: Set up Python 3.10
-      uses: actions/setup-python@v3
+    - uses: actions/checkout@v4
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
       with:
-        python-version: "3.10"
-    - name: Install dependencies
+        python-version: ${{ matrix.python-version }}
+    - name: Install Python test dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install flake8 pytest pytest-asyncio pydantic redis
-        pip install -e ./python
+        pip install flake8 black pytest pytest-asyncio
+        pip install -e python/
     - name: Lint with flake8
       run: |
+        # Stop the build on syntax errors and undefined names
         flake8 python/amp --count --select=E9,F63,F7,F82 --show-source --statistics
-        flake8 python/amp --count --exit-zero --max-complexity=10 --max-line-length=100 --statistics
-    - name: Run Python Tests
-      run: PYTHONPATH=python pytest python/tests/
+        # Style checks (line length etc.) — exit-zero for now but show stats
+        flake8 python/amp --count --max-complexity=10 --max-line-length=100 --statistics --exit-zero
+    - name: Check black formatting
+      run: |
+        pip install black
+        black --check python/amp
+      continue-on-error: true  # warn-only for now
+    - name: Test Python
+      run: |
+        cd python && pytest tests/ -v
       env:
         REDIS_URL: redis://localhost:6379

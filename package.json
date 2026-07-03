@@ -1,6 +1,6 @@
 {
   "name": "agent-memory-protocol",
-  "version": "0.4.0",
+  "version": "1.0.0",
   "description": "跨智能体记忆协议",
   "description_en": "Cross-Agent Memory Protocol",
   "main": "dist/index.js",
@@ -8,7 +8,7 @@
   "module": "dist/index.js",
   "type": "module",
   "bin": {
-    "amp-server": "./mcp/index.ts"
+    "amp-server": "./dist/mcp/index.js"
   },
   "exports": {
     ".": {
@@ -17,13 +17,23 @@
       "types": "./dist/index.d.ts"
     }
   },
+  "files": [
+    "dist/",
+    "mcp/",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
-    "start": "node --experimental-modules mcp/index.ts",
+    "start": "tsx mcp/index.ts",
+    "start:prod": "node dist/mcp/index.js",
+    "dev": "tsx watch mcp/index.ts",
     "demo": "node demo.js",
-    "build": "tsc",
+    "build": "tsc -p tsconfig.json && tsc -p tsconfig.mcp.json",
+    "build:lib": "tsc -p tsconfig.json",
+    "build:mcp": "tsc -p tsconfig.mcp.json",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
     "test:watch": "jest --watch",
-    "lint": "eslint src/**/*.ts",
+    "lint": "eslint src/**/*.ts mcp/**/*.ts",
     "format": "prettier --write \"src/**/*.ts\"",
     "prepublishOnly": "npm run build"
   },
@@ -43,6 +53,14 @@
     "rag",
     "retrieval"
   ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ai-nurmamat/AMP.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ai-nurmamat/AMP/issues"
+  },
+  "homepage": "https://github.com/ai-nurmamat/AMP#readme",
   "license": "MIT",
   "author": "ai-nurmamat <nurmamat@ozluk.ai>",
   "contributors": [
@@ -77,6 +95,7 @@
     "jest": "^30.3.0",
     "prettier": "^3.8.1",
     "ts-jest": "^29.4.9",
+    "tsx": "^4.19.0",
     "typescript-eslint": "^8.58.2"
   }
 }
